@@ -1,0 +1,28 @@
+cmake_minimum_required(VERSION 3.12) #for FindPython feature
+##
+project(vdm-vscode-plugin VERSION 0.1.0)
+set(CMAKE_CXX_STANDARD 14)
+# set(CMAKE_CXX_STANDARD_REQUIRED True)
+# set(INSTALL_DIRECTORY "vdm/capability")
+## Find the library
+find_package(PkgConfig REQUIRED)
+
+
+## build kernel module of inotify capability
+add_subdirectory("inotify-hook")
+
+
+## build userspace library of inotify capability
+# file(GLOB DAEMON_API "./*.h")
+add_library(vdm-inotify-lookup SHARED inotify_lookup.c)
+set_target_properties(vdm-inotify-lookup PROPERTIES
+                    PUBLIC_HEADER "inotify_lookup.h;")
+INSTALL(TARGETS vdm-inotify-lookup
+        LIBRARY DESTINATION ${INSTALL_DIRECTORY}
+        PUBLIC_HEADER DESTINATION ${INSTALL_DIRECTORY})
+
+
+## build userspace application
+add_executable(test-example example.c)
+target_link_libraries(test-example PUBLIC vdm-inotify-lookup)
+#INSTALL(TARGETS test-example DESTINATION bin)
