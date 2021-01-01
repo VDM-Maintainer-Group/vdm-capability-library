@@ -4,8 +4,6 @@ project(vdm-capability-library VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(INSTALL_DIRECTORY "vdm/capability")
-## Find the library
-find_package(PkgConfig REQUIRED)
 
 add_subdirectory("inotify-lookup")
 #add_subdirectory("window-helper")

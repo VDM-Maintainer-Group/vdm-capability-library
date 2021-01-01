@@ -25,5 +25,5 @@ add_custom_target(module-clean COMMAND ${KBUILD_CMD} clean)  #clean
 add_custom_target(insmod COMMAND sudo insmod ${DRIVER_FILE}) #test insmod
 add_custom_target(rmmod COMMAND sudo rmmod ${DRIVER_FILE})
 # install kernel module
-INSTALL(FILES ${DRIVER_FILE}
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/${DRIVER_FILE}
         DESTINATION ${INSTALL_DIRECTORY})
