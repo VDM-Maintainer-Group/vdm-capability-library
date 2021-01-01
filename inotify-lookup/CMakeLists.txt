@@ -22,7 +22,7 @@ INSTALL(TARGETS vdm-inotify-lookup
         LIBRARY DESTINATION lib/${INSTALL_DIRECTORY}
         PUBLIC_HEADER DESTINATION include/${INSTALL_DIRECTORY})
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/VDMInotifyLookupConfig.cmake
-        DESTINATION lib/cmake/${INSTALL_DIRECTORY})
+        DESTINATION lib/cmake/VDMInotifyLookup)
 
 ## build userspace application
 add_executable(test-example example.c)
