@@ -16,10 +16,13 @@ add_subdirectory("inotify-hook")
 add_library(vdm-inotify-lookup SHARED inotify_lookup.c)
 set_target_properties(vdm-inotify-lookup PROPERTIES
                     PUBLIC_HEADER "inotify_lookup.h;")
+configure_file(cmake/VDMInotifyLookupConfig.cmake
+                ${CMAKE_CURRENT_BINARY_DIR}/VDMInotifyLookupConfig.cmake)
 INSTALL(TARGETS vdm-inotify-lookup
         LIBRARY DESTINATION lib/${INSTALL_DIRECTORY}
         PUBLIC_HEADER DESTINATION include/${INSTALL_DIRECTORY})
-
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/VDMInotifyLookupConfig.cmake
+        DESTINATION lib/cmake/${INSTALL_DIRECTORY})
 
 ## build userspace application
 add_executable(test-example example.c)
