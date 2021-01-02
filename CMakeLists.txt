@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(INSTALL_DIRECTORY "vdm/capability")
 
+option(CONFIG_BUILD_BINARIES "Build capability example binaries" OFF)
+
 add_subdirectory("inotify-lookup")
 #add_subdirectory("window-helper")
 #add_subdirectory("browser-helper")
