@@ -5,9 +5,15 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(INSTALL_DIRECTORY "vdm/capability")
 
-option(CONFIG_BUILD_BINARIES "Build capability example binaries" OFF)
+## Global Configurations
+option(ENABLE_BINARIES_BUILD "Build capability example binaries" OFF)
 
-add_subdirectory("inotify-lookup")
+## Inotify Lookup Library
+option(ENABLE_INOTIFY_LOOKUP "Enalbe Library Inotify-Lookup" ON)
+if(ENABLE_INOTIFY_LOOKUP)
+    add_subdirectory("inotify-lookup")
+endif(ENABLE_INOTIFY_LOOKUP)
+
 #add_subdirectory("window-helper")
 #add_subdirectory("browser-helper")
 #add_subdirectory("system-tweaker")
