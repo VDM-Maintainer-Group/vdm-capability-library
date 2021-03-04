@@ -25,8 +25,8 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/VDMInotifyLookupConfig.cmake
         DESTINATION lib/cmake/VDMInotifyLookup)
 
 ## build userspace application
-if(CONFIG_BUILD_BINARIES)
+if(ENABLE_BINARIES_BUILD)
     add_executable(test-example example.c)
     target_link_libraries(test-example PUBLIC vdm-inotify-lookup)
     #INSTALL(TARGETS test-example DESTINATION bin)
-endif(CONFIG_BUILD_BINARIES)
+endif(ENABLE_BINARIES_BUILD)

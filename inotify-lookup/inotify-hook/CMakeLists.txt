@@ -22,8 +22,8 @@ add_custom_command(OUTPUT ${DRIVER_FILE}
         DEPENDS main.c netlink_comm.c VERBATIM)
 add_custom_target(module ALL DEPENDS ${DRIVER_FILE}) #default
 add_custom_target(module-clean COMMAND ${KBUILD_CMD} clean)  #clean
-add_custom_target(insmod COMMAND sudo insmod ${DRIVER_FILE}) #test insmod
-add_custom_target(rmmod COMMAND sudo rmmod ${DRIVER_FILE})
+add_custom_target(insmod-inotify COMMAND sudo insmod ${DRIVER_FILE}) #test insmod
+add_custom_target(rmmod-inotify COMMAND sudo rmmod ${DRIVER_FILE})
 # install kernel module
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/${DRIVER_FILE}
         DESTINATION ${INSTALL_DIRECTORY})
