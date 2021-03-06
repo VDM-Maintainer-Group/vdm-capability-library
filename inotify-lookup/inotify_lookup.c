@@ -16,6 +16,7 @@ int sock_fd = 0;
 struct sockaddr_nl src_addr, dest_addr;
 struct iovec iov;
 struct msghdr msg;
+char **dump_result = NULL;
 
 static int init_socket(void)
 {
@@ -153,7 +154,6 @@ out:
 char** inotify_lookup_dump(const char *name)
 {
     int ret=0, pos=0;
-    char **result = NULL;
     struct msghdr res_msg;
     struct iovec res_iov;
     struct nlmsghdr *nlh;
@@ -173,7 +173,7 @@ char** inotify_lookup_dump(const char *name)
     }
 
     // allocate result buffer
-    result = malloc(MAX_DUMP_LEN * sizeof(char *));
+    dump_result = malloc(MAX_DUMP_LEN * sizeof(char *));
     // init nlmsg struct for "nlh"
     nlh = (struct nlmsghdr *) malloc(NLMSG_SPACE(PATH_MAX));
     memset(nlh, 0, NLMSG_SPACE(PATH_MAX));
@@ -187,8 +187,8 @@ char** inotify_lookup_dump(const char *name)
     // multipart message
     while (pos<MAX_DUMP_LEN && recv_message(&res_msg))
     {
-        result[pos] = malloc(strlen(NLMSG_DATA(nlh)));
-        strcpy(result[pos], NLMSG_DATA(nlh));
+        dump_result[pos] = malloc(strlen(NLMSG_DATA(nlh)));
+        strcpy(dump_result[pos], NLMSG_DATA(nlh));
         pos ++;
 
         memset(nlh, 0, NLMSG_SPACE(PATH_MAX));
@@ -197,5 +197,10 @@ char** inotify_lookup_dump(const char *name)
 out:
     fini_socket();
     free(nlh);
-    return result;
+    return dump_result;
+}
+
+void inotify_lookup_freedump(void)
+{
+    free(dump_result);
 }

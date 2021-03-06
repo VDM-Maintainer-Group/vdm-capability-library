@@ -18,6 +18,8 @@ int main(int argc, char const *argv[])
         pos ++;
     }
 
+    inotify_lookup_freedump();
+
     // ret = inotify_lookup_unregister("code");
     // printf("rm with ret code: %d.\n", ret);
 

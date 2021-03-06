@@ -24,5 +24,6 @@ struct __attribute__((__packed__)) req_msg_t {
 extern int inotify_lookup_register(const char *);
 extern int inotify_lookup_unregister(const char *);
 extern char** inotify_lookup_dump(const char *);
+extern void inotify_lookup_freedump(void);
 
 #endif
