@@ -5,20 +5,19 @@
 
 int main(int argc, char const *argv[])
 {
-    int ret, pos;
-    char **result;
+    int ret, i, length;
+    char result[4096];
 
     ret = inotify_lookup_register("code");
     printf("add with ret code: %d.\n", ret);
 
-    result = inotify_lookup_dump("code");
-    while (pos<MAX_DUMP_LEN && result[pos])
+    length = inotify_lookup_fetch("code");
+    for (i=0; i < length; i++)
     {
-        printf("dump [%d]: %s\n", pos, result[pos]);
-        pos ++;
+        inotify_lookup_get(i, result);
+        printf("dump [%d]: %s\n", i, result);
     }
-
-    inotify_lookup_freedump();
+    inotify_lookup_free();
 
     // ret = inotify_lookup_unregister("code");
     // printf("rm with ret code: %d.\n", ret);

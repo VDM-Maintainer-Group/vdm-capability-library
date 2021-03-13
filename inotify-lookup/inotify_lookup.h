@@ -21,9 +21,15 @@ struct __attribute__((__packed__)) req_msg_t {
 // extern int inotify_create_netlink(void);
 // extern void inotify_destroy_netlink(void);
 
+struct result_t {
+    int length;
+    char **buffer;
+};
+
 extern int inotify_lookup_register(const char *);
 extern int inotify_lookup_unregister(const char *);
-extern char** inotify_lookup_dump(const char *);
-extern void inotify_lookup_freedump(void);
+extern int inotify_lookup_fetch(const char *);
+extern void inotify_lookup_get(int, char *);
+extern void inotify_lookup_free(void);
 
 #endif

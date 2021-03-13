@@ -16,7 +16,11 @@ int sock_fd = 0;
 struct sockaddr_nl src_addr, dest_addr;
 struct iovec iov;
 struct msghdr msg;
-char **dump_result = NULL;
+
+struct result_t result = {
+    .length = 0,
+    .buffer = NULL
+};
 
 static int init_socket(void)
 {
@@ -151,7 +155,7 @@ out:
     return ret;
 }
 
-char** inotify_lookup_dump(const char *name)
+int inotify_lookup_fetch(const char *name)
 {
     int ret=0, pos=0;
     struct msghdr res_msg;
@@ -161,6 +165,11 @@ char** inotify_lookup_dump(const char *name)
         .op        = INOTIFY_REQ_DUMP
     };
     strcpy(req_msg.comm_name, name);
+
+    if (result.buffer)
+    {
+        inotify_lookup_free();
+    }
 
     if ((ret=init_socket()) <= 0)
     {
@@ -173,7 +182,8 @@ char** inotify_lookup_dump(const char *name)
     }
 
     // allocate result buffer
-    dump_result = malloc(MAX_DUMP_LEN * sizeof(char *));
+    result.length = 0;
+    result.buffer = malloc( MAX_DUMP_LEN * sizeof(char *) );
     // init nlmsg struct for "nlh"
     nlh = (struct nlmsghdr *) malloc(NLMSG_SPACE(PATH_MAX));
     memset(nlh, 0, NLMSG_SPACE(PATH_MAX));
@@ -187,20 +197,35 @@ char** inotify_lookup_dump(const char *name)
     // multipart message
     while (pos<MAX_DUMP_LEN && recv_message(&res_msg))
     {
-        dump_result[pos] = malloc(strlen(NLMSG_DATA(nlh)));
-        strcpy(dump_result[pos], NLMSG_DATA(nlh));
+        result.buffer[pos] = malloc(strlen(NLMSG_DATA(nlh)));
+        strcpy(result.buffer[pos], NLMSG_DATA(nlh));
         pos ++;
 
         memset(nlh, 0, NLMSG_SPACE(PATH_MAX));
     }
+    result.length = pos;
 
 out:
     fini_socket();
     free(nlh);
-    return dump_result;
+    return result.length;
 }
 
-void inotify_lookup_freedump(void)
+void inotify_lookup_get(int index, char* ret)
 {
-    free(dump_result);
+    if ( (index<0) || (index>=result.length) )
+    {
+        strcpy("", ret);
+    }
+    else
+    {
+        strcpy(ret, result.buffer[index]);
+    }
+}
+
+void inotify_lookup_free(void)
+{
+    free(result.buffer);
+    result.buffer = NULL;
+    result.length = 0;
 }
