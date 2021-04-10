@@ -4,12 +4,20 @@ project(vdm-inotify-lookup VERSION 0.2.0)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 # set(INSTALL_DIRECTORY "vdm/capability")
-## Find the library
-find_package(PkgConfig REQUIRED)
 
 ## build kernel module of inotify capability
 add_subdirectory("inotify-hook")
 
+include(ExternalProject)
+ExternalProject_Add(
+        inotify-lookup
+        DOWNLOAD_COMMAND ""
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND cargo build COMMAND cargo build --release
+        BINARY_DIR "${CMAKE_SOURCE_DIR}"
+        INSTALL_COMMAND ""
+        TEST_COMMAND cargo test
+        LOG_BUILD ON)
 
 ## build userspace library of inotify capability
 # file(GLOB DAEMON_API "./*.h")

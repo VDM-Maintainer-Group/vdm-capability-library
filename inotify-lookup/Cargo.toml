@@ -1,0 +1,12 @@
+[package]
+name = "inotify-lookup"
+version = "0.1.0"
+authors = ["iamhyc <sudofree@163.com>"]
+edition = "2018"
+
+[lib]
+name = "inotify_lookup"
+crate-type = ["dylib"]
+
+[dependencies]
+# inotify-lookup = { git = "https://github.com/VDM-Maintainer-Group/vdm-capability-library/inotify-lookup", branch="main" }
