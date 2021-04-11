@@ -1,3 +1,5 @@
+use pyo3::prelude::*;
+use pyo3::wrap_pyfunction;
 
 pub mod inotify_lookup {
     use std::net;

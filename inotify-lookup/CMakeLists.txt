@@ -20,17 +20,16 @@ ExternalProject_Add(
         LOG_BUILD ON)
 
 ## build userspace library of inotify capability
-# file(GLOB DAEMON_API "./*.h")
 add_library(vdm-inotify-lookup SHARED inotify_lookup.c)
 set_target_properties(vdm-inotify-lookup PROPERTIES
                     PUBLIC_HEADER "inotify_lookup.h;")
-configure_file(cmake/VDMInotifyLookupConfig.cmake
-                ${CMAKE_CURRENT_BINARY_DIR}/VDMInotifyLookupConfig.cmake)
+# configure_file(cmake/VDMInotifyLookupConfig.cmake
+                # ${CMAKE_CURRENT_BINARY_DIR}/VDMInotifyLookupConfig.cmake)
 INSTALL(TARGETS vdm-inotify-lookup
         LIBRARY DESTINATION lib/${INSTALL_DIRECTORY}
         PUBLIC_HEADER DESTINATION include/${INSTALL_DIRECTORY})
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/VDMInotifyLookupConfig.cmake
-        DESTINATION lib/cmake/VDMInotifyLookup)
+# INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/VDMInotifyLookupConfig.cmake
+        # DESTINATION lib/cmake/VDMInotifyLookup)
 
 ## build userspace application
 if(ENABLE_BINARIES_BUILD)
