@@ -8,9 +8,10 @@ edition = "2018"
 name = "inotify_lookup"
 crate-type = ["cdylib"]
 
+[dependencies]
+neli = "0.5.3"
+maturin = "0.10.2"
+
 [dependencies.pyo3]
 version = "0.13.2"
 features = ["extension-module"]
-
-
-# inotify-lookup = { git = "https://github.com/VDM-Maintainer-Group/vdm-capability-library/inotify-lookup", branch="main" }
