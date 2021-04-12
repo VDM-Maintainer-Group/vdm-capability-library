@@ -5,8 +5,33 @@ use pyo3::wrap_pyfunction;
 
 mod _priv {
     use std::error::Error;
+    use neli::{
+        consts::{nl::*, socket::*},
+        err::NlError,
+        nl::{Nlmsghdr, NlPayload},
+        socket::NlSocketHandle,
+        types::{Buffer,}
+    };
+
+    #[allow(dead_code)] //Rust lint open issue, #47133
+    const NETLINK_USER: i32 = 31;   // (fixed) netlink specific magic number
+    const MAX_NAME_LEN: i32 = 1024; // (fixed) maximum length of app name
+    const PATH_MAX    : i32 = 4096; // (fixed) maximum length of inode pathname
+    const MAX_DUMP_LEN: i32 = 1000; // maximum number of received dump
+    /* struct __attribute__((__packed__)) req_msg_t {
+        int op;
+        char comm_name[MAX_NAME_LEN];
+    }; */
+    enum Command {
+        InotifyReqAdd = 0x01,
+        InotifyReqRm  = 0x02,
+        InotifyReqDump= 0x04,
+    }
 
     fn init_socket() -> Result<(), Box<dyn Error>> {
+        let mut socket = NlSocketHandle::connect(
+            NlFamily::UnrecognizedVariant(NETLINK_USER), None, &[0]);
+        
         unimplemented!();
     }
 
