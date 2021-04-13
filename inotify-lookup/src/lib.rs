@@ -1,10 +1,17 @@
-use std::error::Error;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 
+#[repr(u8)]
+pub enum InotifyOp {
+    InotifyReqAdd = 0x01,
+    InotifyReqRm  = 0x02,
+    InotifyReqDump= 0x04,
+}
 
 mod _priv {
+    use super::InotifyOp;
     use std::error::Error;
+    use std::process::id as getpid;
     use neli::{
         consts::{nl::*, socket::*},
         err::NlError,
@@ -22,39 +29,41 @@ mod _priv {
         int op;
         char comm_name[MAX_NAME_LEN];
     }; */
-    enum Command {
-        InotifyReqAdd = 0x01,
-        InotifyReqRm  = 0x02,
-        InotifyReqDump= 0x04,
+
+    pub fn get_socket() -> Result<NlSocketHandle, NlError> {
+        let socket = NlSocketHandle::connect(
+            NlFamily::UnrecognizedVariant(NETLINK_USER), Some(getpid()), &[0])?;
+        Ok(socket)
     }
 
-    fn init_socket() -> Result<(), Box<dyn Error>> {
-        let mut socket = NlSocketHandle::connect(
-            NlFamily::UnrecognizedVariant(NETLINK_USER), None, &[0]);
-        
+    pub fn send_request(socket:NlSocketHandle, op:InotifyOp, name:&str) -> Result<(),NlError> {
         unimplemented!();
     }
 
-    fn fini_socket() -> Result<(), Box<dyn Error>> {
-        unimplemented!();
-    }
-
-    fn send_request() {
-        unimplemented!();
-    }
-
-    fn recv_message() {
+    pub fn recv_message(socket:NlSocketHandle) {
         unimplemented!();
     }
 }
 
+fn inotify_request_wrapper<T>(name:&str) -> Result<T, ()> {
+    if let Ok(socket) = _priv::get_socket() {
+        match _priv::send_request(socket, InotifyOp::InotifyReqAdd, name) {
+            Ok(_) => Ok(0),
+            Err(_) => Ok(-1)
+        }
+    }
+    else {
+        Err(())
+    }
+}
+
 #[pyfunction]
-pub fn inotify_lookup_register(name: &str) -> PyResult<usize> {
+pub fn inotify_lookup_register(name: &str) -> PyResult<isize> {
     unimplemented!();
 }
 
 #[pyfunction]
-pub fn inotify_lookup_unregister(name: &str) -> PyResult<usize> {
+pub fn inotify_lookup_unregister(name: &str) -> PyResult<isize> {
     unimplemented!();
 }
 
