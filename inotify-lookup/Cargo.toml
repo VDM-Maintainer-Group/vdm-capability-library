@@ -8,6 +8,9 @@ edition = "2018"
 name = "inotify_lookup"
 crate-type = ["cdylib"]
 
+[dependencies.libc]
+version = "0.2.93"
+
 [dependencies.neli]
 version = "0.5.3"
 
