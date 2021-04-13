@@ -12,10 +12,10 @@ include(ExternalProject)
 ExternalProject_Add(
         inotify-lookup
         DOWNLOAD_COMMAND ""
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND cargo build COMMAND cargo build --release
+        CONFIGURE_COMMAND "pip3 install maturin"
+        BUILD_COMMAND maturin build COMMAND maturin build --release
         BINARY_DIR "${CMAKE_SOURCE_DIR}"
-        INSTALL_COMMAND ""
+        INSTALL_COMMAND "" #${CMAKE_SOURCE_DIR}target/wheels/*.whl
         TEST_COMMAND cargo test
         LOG_BUILD ON)
 
