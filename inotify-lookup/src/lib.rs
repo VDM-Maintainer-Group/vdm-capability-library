@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
+use neli::socket::NlSocketHandle;
 
 #[repr(u8)]
 pub enum InotifyOp {
@@ -17,7 +18,6 @@ mod _priv {
         err::NlError,
         nl::{Nlmsghdr, NlPayload},
         socket::NlSocketHandle,
-        types::{Buffer,}
     };
 
     #[allow(dead_code)] //Rust lint open issue, #47133
@@ -67,15 +67,16 @@ mod _priv {
         Ok(())
     }
 
-    pub fn recv_message(socket:NlSocketHandle) {
+    pub fn recv_message(socket:&mut NlSocketHandle) -> Option<String> {
+        //TODO: receive the message
         unimplemented!();
     }
 }
 
-fn inotify_send_request(op:InotifyOp, name:&str) -> Result<(), ()> {
+fn inotify_send_request(op:InotifyOp, name:&str) -> Result<NlSocketHandle, ()> {
     if let Ok(mut socket) = _priv::get_socket() {
         match _priv::send_request(&mut socket, op, name) {
-            Ok(_) => Ok(()),
+            Ok(_) => Ok(socket),
             Err(_) => Err(())
         }
     }
@@ -102,13 +103,16 @@ pub fn inotify_lookup_unregister(name: &str) -> PyResult<isize> {
 
 #[pyfunction]
 pub fn inotify_lookup_dump(name: &str) -> PyResult<Vec<String>> {
-    if let Err(_) = inotify_send_request(InotifyOp::InotifyReqDump, name) {
-        return Ok(Vec::<String>::new());
+    match inotify_send_request(InotifyOp::InotifyReqDump, name) {
+        Err(_) => Ok(Vec::<String>::new()),
+        Ok(mut socket) => {
+            let mut result = Vec::<String>::with_capacity(MAX_DUMP_LEN);
+            while let Some(value) = _priv::recv_message(&mut socket) {
+                result.push(value);
+            }
+            Ok(result)
+        }
     }
-    
-    let mut result = Vec::<String>::with_capacity(MAX_DUMP_LEN);
-    //TODO: receive message
-    Ok(result)
 }
 
 #[pymodule]
