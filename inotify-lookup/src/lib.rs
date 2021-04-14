@@ -11,7 +11,7 @@ pub enum InotifyOp {
 const MAX_DUMP_LEN: usize = 1000; // maximum number of received dump
 
 mod _priv {
-    use super::InotifyOp;
+    use super::{InotifyOp, MAX_DUMP_LEN};
     use std::process::id as getpid;
     use neli::{
         consts::{nl::*, socket::*},
@@ -39,7 +39,7 @@ mod _priv {
 
     pub fn get_socket() -> Result<NlSocketHandle, NlError> {
         let socket = NlSocketHandle::connect(
-            NlFamily::UnrecognizedVariant(NETLINK_USER), Some(getpid()), &[0])?;
+            NlFamily::UnrecognizedVariant(NETLINK_USER), Some(getpid()), &[])?;
         Ok(socket)
     }
 
@@ -67,9 +67,15 @@ mod _priv {
         Ok(())
     }
 
-    pub fn recv_message(socket:&mut NlSocketHandle) -> Option<String> {
-        //TODO: receive the message
-        unimplemented!();
+    pub fn recv_message(socket:&mut NlSocketHandle) -> Result<Vec<String>,()> {
+        let mut result = Vec::<String>::new();
+        for next in socket.iter::<String>(true) {
+            if let Ok(item) = next {
+                let _content = item.get_payload().unwrap();
+                result.push( String::clone(_content) );
+            }
+        }
+        Ok(result)
     }
 }
 
@@ -86,7 +92,7 @@ fn inotify_send_request(op:InotifyOp, name:&str) -> Result<NlSocketHandle, ()> {
 }
 
 #[pyfunction]
-pub fn inotify_lookup_register(name: &str) -> PyResult<isize> {
+pub fn register(name: &str) -> PyResult<isize> {
     match inotify_send_request(InotifyOp::InotifyReqAdd, name) {
         Ok(_) => Ok(0),
         Err(_) => Ok(-1)
@@ -94,7 +100,7 @@ pub fn inotify_lookup_register(name: &str) -> PyResult<isize> {
 }
 
 #[pyfunction]
-pub fn inotify_lookup_unregister(name: &str) -> PyResult<isize> {
+pub fn unregister(name: &str) -> PyResult<isize> {
     match inotify_send_request(InotifyOp::InotifyReqRm, name) {
         Ok(_) => Ok(0),
         Err(_) => Ok(-1)
@@ -102,24 +108,25 @@ pub fn inotify_lookup_unregister(name: &str) -> PyResult<isize> {
 }
 
 #[pyfunction]
-pub fn inotify_lookup_dump(name: &str) -> PyResult<Vec<String>> {
+pub fn dump(name: &str) -> PyResult<Vec<String>> {
     match inotify_send_request(InotifyOp::InotifyReqDump, name) {
         Err(_) => Ok(Vec::<String>::new()),
         Ok(mut socket) => {
-            let mut result = Vec::<String>::with_capacity(MAX_DUMP_LEN);
-            while let Some(value) = _priv::recv_message(&mut socket) {
-                result.push(value);
+            if let Ok(result) = _priv::recv_message(&mut socket) {
+                Ok(result)
             }
-            Ok(result)
+            else {
+                Ok( Vec::<String>::new() )
+            }
         }
     }
 }
 
 #[pymodule]
 fn inotify_lookup(_py:Python, m:&PyModule) -> PyResult<()> {
-    m.add_function( wrap_pyfunction!(inotify_lookup_register, m)? )?;
-    m.add_function( wrap_pyfunction!(inotify_lookup_unregister, m)? )?;
-    m.add_function( wrap_pyfunction!(inotify_lookup_dump, m)? )?;
+    m.add_function( wrap_pyfunction!(register, m)? )?;
+    m.add_function( wrap_pyfunction!(unregister, m)? )?;
+    m.add_function( wrap_pyfunction!(dump, m)? )?;
     Ok(())
 }
 
