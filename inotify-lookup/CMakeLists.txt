@@ -11,9 +11,9 @@ ExternalProject_Add(
         inotify-lookup
         DOWNLOAD_COMMAND ""
         CONFIGURE_COMMAND pip3 install maturin
-        BUILD_COMMAND maturin build COMMAND maturin build --release
+        BUILD_COMMAND maturin build COMMAND maturin build --release --manylinux off
         BINARY_DIR "${CMAKE_SOURCE_DIR}"
-        INSTALL_COMMAND "" #${CMAKE_SOURCE_DIR}target/wheels/*.whl
+        INSTALL_COMMAND "" #${CMAKE_SOURCE_DIR}target/wheels/*linux*.whl
         TEST_COMMAND cargo test
         LOG_BUILD ON)
 

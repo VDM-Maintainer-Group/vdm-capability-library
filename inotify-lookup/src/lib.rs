@@ -2,7 +2,6 @@ use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use neli::socket::NlSocketHandle;
 
-#[repr(u8)]
 pub enum InotifyOp {
     InotifyReqAdd = 0x01,
     InotifyReqRm  = 0x02,
@@ -22,12 +21,13 @@ mod _priv {
 
     #[allow(dead_code)] //Rust lint open issue, #47133
     const NETLINK_USER: i32 = 31;   // (fixed) netlink specific magic number
-    const MAX_NAME_LEN: usize = 1024; // (fixed) maximum length of app name
+    const MAX_NAME_LEN: usize = 10; // FIXME:1024 (fixed) maximum length of app name
     // const MAX_PATH_LEN: usize = 4096; // (fixed) maximum length of inode pathname
+    #[repr(C,packed)]
     struct ReqMessage {
         #[allow(dead_code)] //op never read in "safe" mode
         op : libc::c_int,
-        comm_name: [char; MAX_NAME_LEN]
+        comm_name: [u8; MAX_NAME_LEN]
     }
 
     //Reference: https://stackoverflow.com/questions/28127165/how-to-convert-struct-to-u8
@@ -47,12 +47,14 @@ mod _priv {
     pub fn send_request(socket:&mut NlSocketHandle, op:InotifyOp, name:&str) -> Result<(),NlError> {
         let mut message = ReqMessage{
             op : op as libc::c_int,
-            comm_name : [0 as char; MAX_NAME_LEN]
+            comm_name : [0 as u8; MAX_NAME_LEN]
         };
-        for (i, x) in name.chars().enumerate() {
-            message.comm_name[i] = x;
+        
+        for (i, x) in name.as_bytes().iter().enumerate() {
+            message.comm_name[i] = *x;
         }
-        let _message = unsafe{ any_as_u8_slice(&message) };
+        let message = unsafe{ any_as_u8_slice(&message) };
+        println!("{:#?}", message);
         
         let nlhdr = {
             let len = None;
@@ -60,7 +62,7 @@ mod _priv {
             let flags = NlmFFlags::new(&[]);
             let seq = None;
             let pid = None;
-            let payload = NlPayload::Payload(_message);
+            let payload = NlPayload::Payload(message);
             Nlmsghdr::new(len, nl_type, flags, seq, pid, payload)
         };
         socket.send(nlhdr)?;
