@@ -72,16 +72,22 @@ mod _priv {
     pub fn recv_message(mut socket:NlSocketHandle) -> Result<Vec<String>,()> {
         let mut result = Vec::<String>::new();
 
-        while let Ok(Some(packet)) = socket.recv::<Nlmsg, String>() {
-            match packet.nl_type {
-                Nlmsg::Done => break,
-                _ => {
-                    let _content = packet.nl_payload.get_payload().unwrap();
-                    println!("{}", _content); //FIXME:remove it.
-                    result.push( String::clone(_content) );
-                }
-            }
+        match socket.recv::<Nlmsg, String>() {
+            Ok(_result) => {
+                println!("at least ok!")
+            },
+            Err(_) => println!("wth")
         }
+        // while let Ok(Some(packet)) = socket.recv::<Nlmsg, String>() {
+        //     match packet.nl_type {
+        //         Nlmsg::Done => break,
+        //         _ => {
+        //             let _content = packet.nl_payload.get_payload().unwrap();
+        //             println!("{}", _content); //FIXME:remove it.
+        //             result.push( String::clone(_content) );
+        //         }
+        //     }
+        // }
 
         Ok(result)
     }
