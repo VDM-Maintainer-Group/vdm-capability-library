@@ -1,6 +1,5 @@
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
-use neli::socket::NlSocketHandle;
 
 pub enum InotifyOp {
     InotifyReqAdd = 0x01,
@@ -44,7 +43,7 @@ mod _priv {
         Ok(socket)
     }
 
-    pub fn send_request(socket:&mut NlSocketHandle, op:InotifyOp, name:&str) -> Result<(),NlError> {
+    pub fn send_request(mut socket:NlSocketHandle, op:InotifyOp, name:&str) -> Result<(),NlError> {
         let mut message = ReqMessage{
             op : op as libc::c_int,
             comm_name : [0 as u8; MAX_NAME_LEN]
@@ -54,14 +53,13 @@ mod _priv {
             message.comm_name[i] = *x;
         }
         let message = unsafe{ any_as_u8_slice(&message) };
-        println!("{:#?}", message);
         
         let nlhdr = {
             let len = None;
             let nl_type = 0 as u16;
             let flags = NlmFFlags::new(&[]);
             let seq = None;
-            let pid = None;
+            let pid = Some(getpid());
             let payload = NlPayload::Payload(message);
             Nlmsghdr::new(len, nl_type, flags, seq, pid, payload)
         };
@@ -70,11 +68,12 @@ mod _priv {
         Ok(())
     }
 
-    pub fn recv_message(socket:&mut NlSocketHandle) -> Result<Vec<String>,()> {
+    pub fn recv_message(mut socket:NlSocketHandle) -> Result<Vec<String>,()> {
         let mut result = Vec::<String>::new();
         for next in socket.iter::<String>(true) {
             if let Ok(item) = next {
                 let _content = item.get_payload().unwrap();
+                println!("{}", _content);
                 result.push( String::clone(_content) );
             }
         }
@@ -82,10 +81,10 @@ mod _priv {
     }
 }
 
-fn inotify_send_request(op:InotifyOp, name:&str) -> Result<NlSocketHandle, ()> {
-    if let Ok(mut socket) = _priv::get_socket() {
-        match _priv::send_request(&mut socket, op, name) {
-            Ok(_) => Ok(socket),
+fn inotify_send_request(op:InotifyOp, name:&str) -> Result<(), ()> {
+    if let Ok(socket) = _priv::get_socket() {
+        match _priv::send_request(socket, op, name) {
+            Ok(_) => Ok(()),
             Err(_) => Err(())
         }
     }
@@ -114,8 +113,9 @@ pub fn unregister(name: &str) -> PyResult<isize> {
 pub fn dump(name: &str) -> PyResult<Vec<String>> {
     match inotify_send_request(InotifyOp::InotifyReqDump, name) {
         Err(_) => Ok(Vec::<String>::new()),
-        Ok(mut socket) => {
-            if let Ok(result) = _priv::recv_message(&mut socket) {
+        Ok(_) => {
+            let socket = _priv::get_socket().unwrap();
+            if let Ok(result) = _priv::recv_message(socket) {
                 Ok(result)
             }
             else {
