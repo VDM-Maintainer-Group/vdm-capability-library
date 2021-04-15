@@ -71,13 +71,18 @@ mod _priv {
 
     pub fn recv_message(mut socket:NlSocketHandle) -> Result<Vec<String>,()> {
         let mut result = Vec::<String>::new();
-        for next in socket.iter::<String>(false) {
-            if let Ok(item) = next {
-                let _content = item.get_payload().unwrap();
-                println!("{}", _content); //FIXME:remove it.
-                result.push( String::clone(_content) );
+
+        while let Ok(Some(packet)) = socket.recv::<Nlmsg, String>() {
+            match packet.nl_type {
+                Nlmsg::Done => break,
+                _ => {
+                    let _content = packet.nl_payload.get_payload().unwrap();
+                    println!("{}", _content); //FIXME:remove it.
+                    result.push( String::clone(_content) );
+                }
             }
         }
+
         Ok(result)
     }
 }
