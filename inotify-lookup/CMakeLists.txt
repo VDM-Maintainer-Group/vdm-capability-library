@@ -9,29 +9,32 @@ add_subdirectory("inotify-hook")
 include(ExternalProject)
 ExternalProject_Add(
         inotify-lookup
-        DOWNLOAD_COMMAND ""
+        SOURCE_DIR ${PROJECT_SOURCE_DIR}
         CONFIGURE_COMMAND pip3 install maturin
-        BUILD_COMMAND maturin build COMMAND maturin build --release --manylinux off
-        BINARY_DIR "${CMAKE_SOURCE_DIR}"
-        INSTALL_COMMAND "" #${CMAKE_SOURCE_DIR}target/wheels/*linux*.whl
-        TEST_COMMAND cargo test
+        BUILD_IN_SOURCE true
+        BUILD_ALWAYS false
+        BUILD_COMMAND maturin build --release --manylinux off --out ${CMAKE_CURRENT_BINARY_DIR}
+        INSTALL_COMMAND "" #pip3 install -U ${CMAKE_CURRENT_BINARY_DIR}/*linux*.whl
+        TEST_COMMAND "" #cargo test
         LOG_BUILD ON)
 
-## build userspace library of inotify capability
-add_library(vdm-inotify-lookup SHARED inotify_lookup.c)
-set_target_properties(vdm-inotify-lookup PROPERTIES
-                    PUBLIC_HEADER "inotify_lookup.h;")
-# configure_file(cmake/VDMInotifyLookupConfig.cmake
-                # ${CMAKE_CURRENT_BINARY_DIR}/VDMInotifyLookupConfig.cmake)
-INSTALL(TARGETS vdm-inotify-lookup
-        LIBRARY DESTINATION lib/${INSTALL_DIRECTORY}
-        PUBLIC_HEADER DESTINATION include/${INSTALL_DIRECTORY})
-# INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/VDMInotifyLookupConfig.cmake
-        # DESTINATION lib/cmake/VDMInotifyLookup)
+#[[ ------------------ previouse native C build ------------------
+    ## build userspace library of inotify capability
+    add_library(vdm-inotify-lookup SHARED inotify_lookup.c)
+    set_target_properties(vdm-inotify-lookup PROPERTIES
+                        PUBLIC_HEADER "inotify_lookup.h;")
+    # configure_file(cmake/VDMInotifyLookupConfig.cmake
+                    # ${CMAKE_CURRENT_BINARY_DIR}/VDMInotifyLookupConfig.cmake)
+    INSTALL(TARGETS vdm-inotify-lookup
+            LIBRARY DESTINATION lib/${INSTALL_DIRECTORY}
+            PUBLIC_HEADER DESTINATION include/${INSTALL_DIRECTORY})
+    # INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/VDMInotifyLookupConfig.cmake
+            # DESTINATION lib/cmake/VDMInotifyLookup)
 
-## build userspace application
-if(ENABLE_BINARIES_BUILD)
-    add_executable(test-example example.c)
-    target_link_libraries(test-example PUBLIC vdm-inotify-lookup)
-    #INSTALL(TARGETS test-example DESTINATION bin)
-endif(ENABLE_BINARIES_BUILD)
+    ## build userspace application
+    if(ENABLE_BINARIES_BUILD)
+        add_executable(test-example example.c)
+        target_link_libraries(test-example PUBLIC vdm-inotify-lookup)
+        #INSTALL(TARGETS test-example DESTINATION bin)
+    endif(ENABLE_BINARIES_BUILD)
+]]
