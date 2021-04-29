@@ -6,6 +6,9 @@ set(INSTALL_DIRECTORY "vdm/capability")
 ## Global Configurations
 option(ENABLE_BINARIES_BUILD "Build capability example binaries" OFF)
 
+## build capability wrapper
+add_subdirectory("__wrapper__")
+
 ## Inotify Lookup Library
 option(ENABLE_INOTIFY_LOOKUP "Enalbe Library Inotify-Lookup" ON)
 if(ENABLE_INOTIFY_LOOKUP)
