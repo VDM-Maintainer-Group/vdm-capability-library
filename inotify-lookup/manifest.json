@@ -1,0 +1,29 @@
+{
+    "name": "inotify-lookup",
+    
+    "build": {
+        "script": "",
+        "output": ""
+    },
+
+    "install": {
+        "script": ""
+    },
+
+    "metadata": {
+        "register": {
+            "restype": "isize",
+            "args": [{"name": "str"}]
+        },
+
+        "unregister": {
+            "restype": "isize",
+            "args": [{"name": "str"}]
+        },
+
+        "dump": {
+            "restype": "Vec<String>",
+            "args": [{"name":"str"}]
+        }
+    }
+}
