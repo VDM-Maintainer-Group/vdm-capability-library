@@ -12,18 +12,18 @@
 
     "metadata": {
         "register": {
-            "restype": "isize",
-            "args": [{"name": "str"}]
+            "restype": "Number",
+            "args": [{"name":"String"}]
         },
 
         "unregister": {
-            "restype": "isize",
-            "args": [{"name": "str"}]
+            "restype": "Number",
+            "args": [{"name":"String"}]
         },
 
         "dump": {
-            "restype": "Vec<String>",
-            "args": [{"name":"str"}]
+            "restype": "Array<String>",
+            "args": [{"name":"String"}]
         }
     }
 }
