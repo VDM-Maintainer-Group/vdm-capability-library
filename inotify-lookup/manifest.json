@@ -1,13 +1,32 @@
 {
     "name": "inotify-lookup",
+    "type": "python",
     
     "build": {
-        "script": "",
-        "output": ""
+        "dependency": {
+            "cargo": [],
+            "pip": ["cmake>=3.18", "maturin"]
+        },
+        "script": [
+            "mkdir release",
+            "cd release; cmake ..; make"
+        ],
+        "output": [
+            "./release/inotify-hook/inotify_hook.ko",
+            "./release/libinotify_lookup.so"
+        ]
     },
 
-    "install": {
-        "script": ""
+    "runtime": {
+        "dependency": {},
+        "status":
+            "lsmod | grep inotify_hook",
+        "enable": [
+            "pkexec insmod inotify_hook"
+        ],
+        "disable": [
+            "pkexec rmmod inotify_hook"
+        ]
     },
 
     "metadata": {
