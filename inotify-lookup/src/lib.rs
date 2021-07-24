@@ -139,7 +139,10 @@ fn inotify_lookup(_py:Python, m:&PyModule) -> PyResult<()> {
 }
 
 #[test]
-fn test() -> Result<(), std::io::Error> {
-    //TODO: implement integration test
+fn run_test() -> Result<(), std::io::Error> {
+    let _ret = register("code")?;
+    let _result = dump("code");
+    let _ret = unregister("code")?;
+
     Ok(())
 }

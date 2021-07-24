@@ -16,8 +16,7 @@ Feel free to *use or contribute* every best practice in this repo.
 3. make && make install
 
 
-
 ### How to contribute
 
-> TODO
+Please refer to the tutorial [here](CONTRIBUTING.md).
 

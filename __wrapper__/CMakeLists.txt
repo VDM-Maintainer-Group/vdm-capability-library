@@ -1,0 +1,1 @@
+project(vdm-capability-wrapper VERSION 0.1.0)
