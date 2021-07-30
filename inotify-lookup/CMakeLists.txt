@@ -10,10 +10,10 @@ include(ExternalProject)
 ExternalProject_Add(
         inotify-lookup
         SOURCE_DIR ${PROJECT_SOURCE_DIR}
-        CONFIGURE_COMMAND pip3 install maturin
+        CONFIGURE_COMMAND ""
         BUILD_IN_SOURCE true
         BUILD_ALWAYS false
-        BUILD_COMMAND maturin build --release --manylinux off --out ${CMAKE_CURRENT_BINARY_DIR}
-        INSTALL_COMMAND "" #pip3 install -U ${CMAKE_CURRENT_BINARY_DIR}/*linux*.whl
+        BUILD_COMMAND cargo build --release
+        INSTALL_COMMAND ""
         TEST_COMMAND "" #cargo test
         LOG_BUILD ON)

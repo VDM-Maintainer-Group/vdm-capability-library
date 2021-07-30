@@ -5,14 +5,14 @@
     "build": {
         "dependency": {
             "cargo": [],
-            "pip": ["cmake>=3.18", "maturin"]
+            "pip": []
         },
         "script": [
             "mkdir release",
             "cd release; cmake ..; make"
         ],
         "output": [
-            "./release/libinotify_lookup.so@inotify_lookup",
+            "./target/release/libinotify_lookup.so",
             "./release/inotify-hook/inotify_hook.ko"
         ]
     },
