@@ -1,12 +1,12 @@
 {
     "name": "inotify-lookup",
-    "type": "python",
+    "type": "rust",
     "version": "0.1.0",
     
     "build": {
         "dependency": {
             "cargo": [],
-            "pip": ["maturin"]
+            "pip": []
         },
         "script": [
             "mkdir -p release",

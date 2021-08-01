@@ -7,7 +7,7 @@ include(ExternalProject)
 ExternalProject_Add(
     capability-library
     SOURCE_DIR ${PROJECT_SOURCE_DIR}
-    CONFIGURE_COMMAND pip3 install halo
+    CONFIGURE_COMMAND pip3 install halo pyyaml
     BUILD_IN_SOURCE true
     BUILD_ALWAYS true
     BUILD_COMMAND python3 build.py build

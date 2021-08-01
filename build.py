@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-import os, sys, time, shutil, configparser, argparse, subprocess as sp
+import os, sys, time, shutil, argparse, subprocess as sp
 from pathlib import Path
-import halo, termcolor
+import halo, termcolor, yaml
 import json
 
 DBG = 1
@@ -120,28 +120,24 @@ class SimpleBuildSystem:
 
     def _write_config_file(self, manifest):
         _output = [ x[1] if x[1] else x[0] for x in self.output ]
-        _runtime = manifest['runtime']
         #
-        cfg = configparser.ConfigParser()
-        cfg['DEFAULT'] = {
-            'entry':Path(_output[0]).name, 'files': _output
-        }
-        #
-        cfg['runtime'] = {
-            'status':_runtime['status'], 'enable':_runtime['enable'], 'disable':_runtime['disable']
-        }
-        cfg['metadata'] = {
-            'name':manifest['name'], 'class':manifest['type'], 'version':manifest['version']
+        cfg = {
+            'entry':Path(_output[0]).name, 'files': _output,
+            'runtime': manifest['runtime'],
+            'metadata': {
+                'name':manifest['name'], 'class':manifest['type'], 'version':manifest['version'],
+                'func': {}
+            }
         }
         #
         for name,meta in manifest['metadata'].items():
-            cfg['metadata.func.%s'%name] = {
-                'restype': meta['restype'], 'args': meta['args']
-            }
+            cfg['metadata']['func'].update({
+                name : { 'restype': meta['restype'], 'args': meta['args'] }
+            })
         #
         _cfg_path = self.output_dir/self.name; _cfg_path.mkdir(parents=True, exist_ok=True)
         with open(_cfg_path/'.conf', 'w') as cfg_file:
-            cfg.write(cfg_file)
+            yaml.dump(cfg, cfg_file)
         pass
 
     def load_manifest(self):
