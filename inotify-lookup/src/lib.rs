@@ -1,5 +1,5 @@
-use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
+// use pyo3::prelude::*;
+// use pyo3::wrap_pyfunction;
 use neli::socket::NlSocketHandle;
 
 pub enum InotifyOp {
@@ -87,9 +87,9 @@ mod _priv {
     }
 }
 
-fn inotify_send_request(op:InotifyOp, name:&str) -> Result<NlSocketHandle, ()> {
+fn inotify_send_request(op:InotifyOp, name:String) -> Result<NlSocketHandle, ()> {
     if let Ok(socket) = _priv::get_socket() {
-        match _priv::send_request(socket, op, name) {
+        match _priv::send_request(socket, op, &name) {
             Ok(socket) => Ok(socket),
             Err(_) => Err(())
         }
@@ -99,50 +99,46 @@ fn inotify_send_request(op:InotifyOp, name:&str) -> Result<NlSocketHandle, ()> {
     }
 }
 
-#[pyfunction]
-pub fn register(name: &str) -> PyResult<isize> {
+use serde_wrapper::jsonify;
+
+#[jsonify]
+pub fn register(name: String) -> isize {
     match inotify_send_request(InotifyOp::InotifyReqAdd, name) {
-        Ok(_) => Ok(0),
-        Err(_) => Ok(-1)
+        Ok(_) => 0,
+        Err(_) => -1
     }
 }
 
-#[pyfunction]
-pub fn unregister(name: &str) -> PyResult<isize> {
+pub fn unregister(name: String) -> isize {
     match inotify_send_request(InotifyOp::InotifyReqRm, name) {
-        Ok(_) => Ok(0),
-        Err(_) => Ok(-1)
+        Ok(_) => 0,
+        Err(_) => -1
     }
 }
 
-#[pyfunction]
-pub fn dump(name: &str) -> PyResult<Vec<String>> {
+// #[pyfunction]
+// pub fn dump(name: &str) -> PyResult<Vec<String>> {
+pub fn dump(name: String) -> Vec<String> {
     match inotify_send_request(InotifyOp::InotifyReqDump, name) {
-        Err(_) => Ok(Vec::<String>::new()),
+        Err(_) => Vec::<String>::new(),
         Ok(socket) => {
             if let Ok(result) = _priv::recv_message(socket) {
-                Ok(result)
+                result
             }
             else {
-                Ok( Vec::<String>::new() )
+                Vec::<String>::new()
             }
         }
     }
 }
 
-#[pymodule]
-fn inotify_lookup(_py:Python, m:&PyModule) -> PyResult<()> {
-    m.add_function( wrap_pyfunction!(register, m)? )?;
-    m.add_function( wrap_pyfunction!(unregister, m)? )?;
-    m.add_function( wrap_pyfunction!(dump, m)? )?;
-    Ok(())
-}
-
 #[test]
 fn run_test() -> Result<(), std::io::Error> {
-    let _ret = register("code")?;
-    let _result = dump("code");
-    let _ret = unregister("code")?;
+    let app_name = serde_json::to_string("code").unwrap();
+
+    println!("register: {}", register( app_name.clone() ));
+    println!("dump: {:?}", dump( app_name.clone() ));
+    println!("unregister: {}", unregister( app_name.clone() ));
 
     Ok(())
 }
