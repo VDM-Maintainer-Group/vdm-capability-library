@@ -101,6 +101,7 @@ fn inotify_send_request(op:InotifyOp, name:String) -> Result<NlSocketHandle, ()>
 
 use serde_wrapper::jsonify;
 
+#[no_mangle]
 #[jsonify]
 pub fn register(name: String) -> isize {
     match inotify_send_request(InotifyOp::InotifyReqAdd, name) {
@@ -109,6 +110,9 @@ pub fn register(name: String) -> isize {
     }
 }
 
+// #[jsonify]
+// #[no_mangle]
+// #[allow(improper_ctypes_definitions)]
 pub fn unregister(name: String) -> isize {
     match inotify_send_request(InotifyOp::InotifyReqRm, name) {
         Ok(_) => 0,
@@ -116,8 +120,9 @@ pub fn unregister(name: String) -> isize {
     }
 }
 
-// #[pyfunction]
-// pub fn dump(name: &str) -> PyResult<Vec<String>> {
+// #[jsonify]
+// #[no_mangle]
+// #[allow(improper_ctypes_definitions)]
 pub fn dump(name: String) -> Vec<String> {
     match inotify_send_request(InotifyOp::InotifyReqDump, name) {
         Err(_) => Vec::<String>::new(),
