@@ -110,9 +110,8 @@ pub fn register(name: String) -> isize {
     }
 }
 
-// #[jsonify]
-// #[no_mangle]
-// #[allow(improper_ctypes_definitions)]
+#[no_mangle]
+#[jsonify]
 pub fn unregister(name: String) -> isize {
     match inotify_send_request(InotifyOp::InotifyReqRm, name) {
         Ok(_) => 0,
@@ -120,9 +119,8 @@ pub fn unregister(name: String) -> isize {
     }
 }
 
-// #[jsonify]
-// #[no_mangle]
-// #[allow(improper_ctypes_definitions)]
+#[no_mangle]
+#[jsonify]
 pub fn dump(name: String) -> Vec<String> {
     match inotify_send_request(InotifyOp::InotifyReqDump, name) {
         Err(_) => Vec::<String>::new(),
