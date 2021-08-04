@@ -31,6 +31,7 @@ pub fn jsonify(_attr: TokenStream, input: TokenStream) -> TokenStream {
     // change function output type to "String"
     sig.output = syn::parse( quote!(->String).into() ).unwrap();
 
+    // build wrapped block of statements
     let block: syn::Block = syn::parse(
         quote!({
             let res = { #block };
@@ -45,6 +46,5 @@ pub fn jsonify(_attr: TokenStream, input: TokenStream) -> TokenStream {
         vis: syn::parse( quote!(pub).into() ).unwrap(),
         sig, block
     };
-    // println!("{}", quote!(#wrapped_func));
     quote!( #wrapped_func ).into()
 }
