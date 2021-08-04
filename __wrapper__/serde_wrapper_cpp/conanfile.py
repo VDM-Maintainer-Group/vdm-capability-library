@@ -8,6 +8,7 @@ class SerdeWrapperConan(ConanFile):
     #
     settings = "os", "compiler", "arch", "build_type"
     exports_sources = "include/*", "CMakeLists.txt", "test.cpp"
+    generators = "cmake"
     #
     no_copy_source = True
     requires = "rapidjson/cci.20200410"
