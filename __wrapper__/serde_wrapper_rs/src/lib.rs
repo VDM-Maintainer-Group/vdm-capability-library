@@ -7,7 +7,7 @@ use syn::{parse_macro_input, parse_quote};
 #[proc_macro_attribute]
 pub fn jsonify(_attr: TokenStream, input: TokenStream) -> TokenStream {
     let func = parse_macro_input!(input as syn::ItemFn);
-    let mut block = func.block;
+    let mut block = func.block.clone();
     let mut sig = func.sig.clone();
 
     sig.inputs.iter_mut().for_each(|arg|{
@@ -31,11 +31,20 @@ pub fn jsonify(_attr: TokenStream, input: TokenStream) -> TokenStream {
     // change function output type to "String"
     sig.output = syn::parse( quote!(->String).into() ).unwrap();
 
-    // generate output
-    quote!(
-        pub #sig {
+    // build wrapped block of statements
+    let block: syn::Block = syn::parse(
+        quote!({
             let res = { #block };
             serde_json::to_string(&res).unwrap_or( "".into() )
-        }
-    ).into()
+        }).into()
+    ).unwrap();
+    let block = Box::new(block);
+
+    // generate output
+    let wrapped_func = syn::ItemFn {
+        attrs: func.attrs.clone(),
+        vis: syn::parse( quote!(pub).into() ).unwrap(),
+        sig, block
+    };
+    quote!( #wrapped_func ).into()
 }
