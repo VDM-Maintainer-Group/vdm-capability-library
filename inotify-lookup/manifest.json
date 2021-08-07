@@ -9,6 +9,7 @@
             "pip": []
         },
         "script": [
+            "cargo build --release",
             "mkdir -p release",
             "cd release; cmake ..; make"
         ],
