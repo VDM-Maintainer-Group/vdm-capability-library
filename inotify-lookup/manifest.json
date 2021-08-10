@@ -6,7 +6,7 @@
     "build": {
         "dependency": {
             "cargo": [],
-            "pip": ["maturin"]
+            "pip": ["cmake", "maturin"]
         },
         "script": [
             "cargo build --release",
