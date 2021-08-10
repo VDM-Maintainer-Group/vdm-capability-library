@@ -15,7 +15,7 @@
         ],
         "output": [
             "./target/release/libinotify_lookup.so@libinotify_lookup.so",
-            "./release/inotify-hook/inotify_hook.ko@kmod/inotify_hook.ko"
+            "./build/inotify-hook/inotify_hook.ko@kmod/inotify_hook.ko"
         ]
     },
 
