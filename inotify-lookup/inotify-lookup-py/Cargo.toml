@@ -1,0 +1,19 @@
+[package]
+name = "inotify-lookup-py"
+version = "0.2.0"
+authors = ["iamhyc <sudofree@163.com>"]
+edition = "2018"
+
+[lib]
+name = "inotify_lookup_py"
+crate-type = ["cdylib"]
+
+[dependencies.libc]
+version = "0.2.93"
+
+[dependencies.neli]
+version = "0.5.3"
+
+[dependencies.pyo3]
+version = "0.13.2"
+features = ["extension-module"]

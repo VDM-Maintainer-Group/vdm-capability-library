@@ -6,12 +6,12 @@
     "build": {
         "dependency": {
             "cargo": [],
-            "pip": []
+            "pip": ["maturin"]
         },
         "script": [
             "cargo build --release",
-            "mkdir -p release",
-            "cd release; cmake ..; make"
+            "mkdir -p build; cd release; cmake ..; make",
+            "cd inofity-lookup-py; maturin build --release --manylinux off"
         ],
         "output": [
             "./target/release/libinotify_lookup.so@libinotify_lookup.so",
@@ -24,7 +24,7 @@
         "status":
             "lsmod | grep inotify_hook",
         "enable": [
-            "pkexec insmod kmod/inotify_hook"
+            "pkexec insmod kmod/inotify_hook.ko"
         ],
         "disable": [
             "pkexec rmmod kmod/inotify_hook"
