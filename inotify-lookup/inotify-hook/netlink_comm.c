@@ -11,7 +11,7 @@ struct sock *nl_sock;
 int append_message_cb(int pid, char *pathname, void *data)
 {
     int ret = 0;
-    char buf[PATH_MAX];
+    char *buf;
     struct nlmsghdr *nlh;
     struct msg_buf_t *msg_buf = data;
 
@@ -22,15 +22,18 @@ int append_message_cb(int pid, char *pathname, void *data)
         goto out;
     }
     NETLINK_CB(msg_buf->skb).dst_group = 0; /* not in mcast group */
+
     // allocate buffer in skb
-    sprintf(buf, "%d,%s", pid, pathname);
-    nlh = nlmsg_put(msg_buf->skb, 0, msg_buf->seq, NLMSG_MIN_TYPE, strlen(buf), NLM_F_MULTI);
-    if (unlikely(!nlh))
-    {
-        ret = -EMSGSIZE;
-        goto out;
-    }
-    strncpy(nlmsg_data(nlh), buf, strlen(buf));
+    buf = kmalloc(PATH_MAX, GFP_ATOMIC);
+        sprintf(buf, "%d,%s", pid, pathname);
+        nlh = nlmsg_put(msg_buf->skb, 0, msg_buf->seq, NLMSG_MIN_TYPE, strlen(buf), NLM_F_MULTI);
+        if (unlikely(!nlh))
+        {
+            ret = -EMSGSIZE;
+            goto out;
+        }
+        strncpy(nlmsg_data(nlh), buf, strlen(buf));
+    kfree(buf);
 
     //finalize current nlh and unicast
     nlmsg_end(msg_buf->skb, nlh);
@@ -46,7 +49,6 @@ out:
 
 static void nl_recv_msg(struct sk_buff *skb)
 {
-    int ret;
     struct nlmsghdr *nlh;
     //req msg
     struct req_msg_t *req_msg;
@@ -59,25 +61,17 @@ static void nl_recv_msg(struct sk_buff *skb)
     req_msg = (struct req_msg_t *)nlmsg_data(nlh);
 
     // printh("req_msg: %d, %s.\n", req_msg->op, req_msg->comm_name);
-
-    if (req_msg->op & INOTIFY_REQ_ADD)
+    switch (req_msg->op)
     {
-        ret = comm_list_add_by_name(req_msg->comm_name);
-    }
-    else if (req_msg->op & INOTIFY_REQ_RM)
-    {
+    case INOTIFY_REQ_ADD:
+        comm_list_add_by_name(req_msg->comm_name);
+        break;
+    case INOTIFY_REQ_RM:
         comm_list_rm_by_name(req_msg->comm_name);
-    }
-    else if (req_msg->op & INOTIFY_REQ_DUMP)
-    {
-        // initial skb
-        
+        break;
+    case INOTIFY_REQ_DUMP:
         // dump record
-        ret = comm_record_dump_by_name(req_msg->comm_name, append_message_cb, (void *) &msg_buf);
-        if (ret < 0)
-        {
-            goto out;
-        }
+        comm_record_dump_by_name(req_msg->comm_name, append_message_cb, (void *) &msg_buf);
         // finalize the dump
         msg_buf.skb = nlmsg_new(NLMSG_DEFAULT_SIZE, 0);
         if (unlikely(!msg_buf.skb)) {
@@ -88,7 +82,7 @@ static void nl_recv_msg(struct sk_buff *skb)
         nlh = nlmsg_put(msg_buf.skb, 0, msg_buf.seq, NLMSG_DONE, strlen("done"), NLM_F_MULTI);
         if (unlikely(!nlh))
         {
-            ret = -EMSGSIZE;
+            // ret = -EMSGSIZE;
             goto out;
         }
         strncpy(nlmsg_data(nlh), "done", strlen("done"));
@@ -98,11 +92,12 @@ static void nl_recv_msg(struct sk_buff *skb)
         {
             printh("nl_recv_msg: message response to %d failed.\n", msg_buf.usr_pid);
         }
-    }
-    else
-    {
+        break;
+    default:
         printh("nl_recv_msg: bad request.\n");
+        break;
     }
+
 out:
     return;
 }

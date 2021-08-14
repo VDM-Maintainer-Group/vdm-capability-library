@@ -1,23 +1,3 @@
-[package]
-name = "inotify-lookup"
-version = "0.2.0"
-authors = ["iamhyc <sudofree@163.com>"]
-edition = "2018"
-
-[lib]
-name = "inotify_lookup"
-crate-type = ["cdylib"]
-
-[dependencies]
-serde_json = "1.0"
-serde_wrapper = {path="../__wrapper__/serde_wrapper_rs"}
-
-[dependencies.libc]
-version = "0.2.93"
-
-[dependencies.neli]
-version = "0.5.3"
-
-[dependencies.pyo3]
-version = "0.13.2"
-features = ["extension-module"]
+[workspace]
+members = ["inotify-lookup", "inotify-lookup-py"]
+default-members = ["inotify-lookup"]

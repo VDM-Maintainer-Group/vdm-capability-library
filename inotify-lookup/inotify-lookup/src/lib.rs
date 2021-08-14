@@ -1,5 +1,3 @@
-// use pyo3::prelude::*;
-// use pyo3::wrap_pyfunction;
 use neli::socket::NlSocketHandle;
 
 pub enum InotifyOp {

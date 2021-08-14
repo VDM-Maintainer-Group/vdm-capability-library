@@ -262,8 +262,8 @@ def execute(sbs:SimpleBuildSystem, command:str, args):
 
     if len(work_dirs)==0:
         return
-    # if not args.no_logo:
-    #     display_logo()
+    if not args.display_logo:
+        display_logo()
     
     if command=='install':
         apply(sbs.install, work_dirs)
@@ -288,7 +288,7 @@ if __name__ == '__main__':
     try:
         parser = argparse.ArgumentParser(
             description='Simple Build System for VDM Capability Library.')
-        parser.add_argument('--no-logo', action='store_true', default=False)
+        parser.add_argument('--display-logo', action='store_true', default=False)
         subparsers = parser.add_subparsers(dest='command')
         init_subparsers(subparsers)
         #

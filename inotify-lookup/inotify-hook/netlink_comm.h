@@ -24,7 +24,6 @@ struct msg_buf_t {
     struct sk_buff *skb;
     int usr_pid;
     int seq;
-    char buf[PATH_MAX];
 };
 
 int netlink_comm_init(void);
