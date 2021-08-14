@@ -285,9 +285,10 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
     int wd;
     struct path path;
     unsigned int flags = 0;
-    char buf[PATH_MAX];
+    char *buf; //[PATH_MAX];
     char *pname=NULL, *precord=NULL;
     struct comm_list_item *item;
+
     // decode the registers
     int fd = (int) regs->di;
     const char __user *pathname = (char __user *) regs->si;
@@ -302,18 +303,31 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
         flags |= LOOKUP_DIRECTORY;
     if ( wd>=0 && (item=comm_list_find(current->comm)) && (user_path_at(AT_FDCWD, pathname, flags, &path)==0) )
     {
+        // get pname from `struct path`
+        buf = kmalloc(PATH_MAX, GFP_ATOMIC);
+        if (unlikely(!buf))
+        {
+            return -ENOMEM;
+        }
         pname = dentry_path_raw(path.dentry, buf, PATH_MAX);
         path_put(&path);
+
         // insert into comm_record
         precord = kmalloc(strlen(pname), GFP_ATOMIC);
         if (unlikely(!precord))
         {
+            kfree(buf);
             return -ENOMEM;
         }
         strcpy(precord, pname); //"pname" points to "buf[PATH_MAX]"
         comm_record_insert(&item->record, task_pid_nr(current), fd, wd, precord);
         // printh("%s, PID %d add (%d,%d): %s\n", current->comm, task_pid_nr(current), fd, wd, precord);
+
+        //finalize with all successful memory allocation
+        kfree(precord);
+        kfree(buf);
     }
+
     return wd;
 }
 
