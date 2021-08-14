@@ -59,25 +59,17 @@ static void nl_recv_msg(struct sk_buff *skb)
     req_msg = (struct req_msg_t *)nlmsg_data(nlh);
 
     // printh("req_msg: %d, %s.\n", req_msg->op, req_msg->comm_name);
-
-    if (req_msg->op & INOTIFY_REQ_ADD)
+    switch (req_msg->op)
     {
-        ret = comm_list_add_by_name(req_msg->comm_name);
-    }
-    else if (req_msg->op & INOTIFY_REQ_RM)
-    {
+    case INOTIFY_REQ_ADD:
+        comm_list_add_by_name(req_msg->comm_name);
+        break;
+    case INOTIFY_REQ_RM:
         comm_list_rm_by_name(req_msg->comm_name);
-    }
-    else if (req_msg->op & INOTIFY_REQ_DUMP)
-    {
-        // initial skb
-        
+        break;
+    case INOTIFY_REQ_DUMP:
         // dump record
-        ret = comm_record_dump_by_name(req_msg->comm_name, append_message_cb, (void *) &msg_buf);
-        if (ret < 0)
-        {
-            goto out;
-        }
+        comm_record_dump_by_name(req_msg->comm_name, append_message_cb, (void *) &msg_buf);
         // finalize the dump
         msg_buf.skb = nlmsg_new(NLMSG_DEFAULT_SIZE, 0);
         if (unlikely(!msg_buf.skb)) {
@@ -98,11 +90,12 @@ static void nl_recv_msg(struct sk_buff *skb)
         {
             printh("nl_recv_msg: message response to %d failed.\n", msg_buf.usr_pid);
         }
-    }
-    else
-    {
+        break;
+    default:
         printh("nl_recv_msg: bad request.\n");
+        break;
     }
+
 out:
     return;
 }
