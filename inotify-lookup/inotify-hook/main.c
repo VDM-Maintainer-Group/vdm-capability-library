@@ -24,26 +24,28 @@ static int comm_record_insert(struct comm_record_t *record, unsigned long pid, i
     struct radix_tree_root *p_fd_wd_rt;
 
     p_fd_wd_rt = radix_tree_lookup(&record->pid_rt, pid);
+    //create pid_rt if not exists
     if (!p_fd_wd_rt)
     {
         p_fd_wd_rt = kmalloc(sizeof(struct radix_tree_root), GFP_KERNEL);
-        if (unlikely(!p_fd_wd_rt))
+        if (likely(p_fd_wd_rt))
         {
-            return -ENOMEM;
-        }
-        INIT_RADIX_TREE(p_fd_wd_rt, GFP_ATOMIC);
+            INIT_RADIX_TREE(p_fd_wd_rt, GFP_ATOMIC);
 
-        spin_lock(&record->lock);
-        ret = radix_tree_insert(&record->pid_rt, pid, p_fd_wd_rt);
-        spin_unlock(&record->lock);
+            spin_lock(&record->lock);
+            ret = radix_tree_insert(&record->pid_rt, pid, p_fd_wd_rt);
+            spin_unlock(&record->lock);
 
-        if (unlikely(ret<0))
-        {
-            printh("comm_record: pid_rt allocation failed for %ld.\n", pid);
-            return ret;
+            if (unlikely(ret<0))
+            {
+                printh("comm_record: pid_rt allocation failed for %ld.\n", pid);
+                return ret;
+            }
         }
+        else { return -ENOMEM; }  
     }
 
+    // insert the record
     spin_lock(&record->lock);
     ret = radix_tree_insert(p_fd_wd_rt, fd_wd_to_mark(fd,wd), pname);
     spin_unlock(&record->lock);
@@ -191,33 +193,34 @@ static struct comm_list_item * comm_list_find(const char *name)
 int comm_list_add_by_name(const char *name)
 {
     struct comm_list_item *item;
+
     // check duplicated allocations
-    if (unlikely(comm_list_find(name)))
+    if (comm_list_find(name))
     {
-        goto out;
+        return 0;
     }
+
     // allocate memory
-    item = kmalloc(sizeof(struct comm_list_item), GFP_ATOMIC);
-    if (unlikely(!item))
+    item = kmalloc(sizeof(struct comm_list_item), GFP_KERNEL);
+    if (likely(item))
     {
-        return -ENOMEM;
+        item->comm_name = kmalloc(strlen(name), GFP_KERNEL);
+        if (likely(item->comm_name))
+        {
+            // initialize the item
+            strcpy(item->comm_name, name);
+            comm_record_init(&item->record);
+            INIT_LIST_HEAD(&item->node);
+            // add onto comm_list
+            spin_lock(&comm_list.lock);
+            list_add(&item->node, &comm_list.head);
+            spin_unlock(&comm_list.lock);
+            printh("comm_list add \"%s\"\n", name);
+            return 0;
+        }
+        else{ kfree(item); return -ENOMEM; }
     }
-    item->comm_name = kmalloc(strlen(name), GFP_ATOMIC);
-    if (unlikely(!item->comm_name))
-    {
-        return -ENOMEM;
-    }
-    // initialize the item
-    strcpy(item->comm_name, name);
-    comm_record_init(&item->record);
-    INIT_LIST_HEAD(&item->node);
-    // add onto comm_list
-    spin_lock(&comm_list.lock);
-    list_add(&item->node, &comm_list.head);
-    spin_unlock(&comm_list.lock);
-    printh("comm_list add \"%s\"\n", name);
-out:
-    return 0;
+    else { return -ENOMEM; }
 }
 
 static void comm_list_rm(struct comm_list_item *item)
@@ -257,7 +260,6 @@ static int comm_list_init(void)
 
     spin_lock_init(&comm_list.lock);
     INIT_LIST_HEAD(&comm_list.head);
-    // ret = comm_list_add_by_name("code"); //for test
     
     return ret;
 }
@@ -294,7 +296,7 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
     const char __user *pathname = (char __user *) regs->si;
     u32 mask = (u32) regs->dx;
 
-    // do the original function
+    // call the original function
     wd = KHOOK_ORIGIN(ORIGIN(inotify_add_watch), regs);
     // get the pathname
     if (!(mask & IN_DONT_FOLLOW))
@@ -303,29 +305,27 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
         flags |= LOOKUP_DIRECTORY;
     if ( wd>=0 && (item=comm_list_find(current->comm)) && (user_path_at(AT_FDCWD, pathname, flags, &path)==0) )
     {
-        // get pname from `struct path`
         buf = kmalloc(PATH_MAX, GFP_ATOMIC);
-        if (unlikely(!buf))
+        // get pname from `struct path`
+        if (likely(buf))
         {
-            return -ENOMEM;
-        }
-        pname = dentry_path_raw(path.dentry, buf, PATH_MAX);
-        path_put(&path);
+            pname = dentry_path_raw(path.dentry, buf, PATH_MAX);
+            path_put(&path);
 
-        // insert into comm_record
-        precord = kmalloc(strlen(pname), GFP_ATOMIC);
-        if (unlikely(!precord))
-        {
+            // insert into comm_record
+            precord = kmalloc(strlen(pname), GFP_ATOMIC);
+            if (unlikely(!precord))
+            {
+                kfree(buf);
+                return -ENOMEM;
+            }
+            strcpy(precord, pname); //"pname" points to "buf[PATH_MAX]"
+            comm_record_insert(&item->record, task_pid_nr(current), fd, wd, precord);
+            // printh("%s, PID %d add (%d,%d): %s\n", current->comm, task_pid_nr(current), fd, wd, precord);
+
             kfree(buf);
-            return -ENOMEM;
         }
-        strcpy(precord, pname); //"pname" points to "buf[PATH_MAX]"
-        comm_record_insert(&item->record, task_pid_nr(current), fd, wd, precord);
-        // printh("%s, PID %d add (%d,%d): %s\n", current->comm, task_pid_nr(current), fd, wd, precord);
-
-        //finalize with all successful memory allocation
-        kfree(precord);
-        kfree(buf);
+        else { wd = -ENOMEM; }
     }
 
     return wd;
@@ -341,6 +341,7 @@ static long MODIFY(inotify_rm_watch)(const struct pt_regs *regs)
     int fd = (int) regs->di;
     u32 wd = (u32) regs->si;
 
+    // call the original function
     ret = KHOOK_ORIGIN(ORIGIN(inotify_rm_watch), regs);
 
     if ((item=comm_list_find(current->comm)))
