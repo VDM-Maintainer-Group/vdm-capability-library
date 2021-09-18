@@ -231,6 +231,7 @@ def display_logo():
     with TypeWriter() as tw:
         tw.write(['Simple', ' Build', ' System'], 500, 'yellow', 'on_blue', True)
         tw.write( list(' for VDM Capability Library'), color='cyan' )
+        tw.write([''], duration=100)
     pass
 
 def validate_work_dirs(work_dirs:list):
@@ -262,14 +263,14 @@ def execute(sbs:SimpleBuildSystem, command:str, args):
 
     if len(work_dirs)==0:
         return
-    if not args.display_logo:
-        display_logo()
     
     if command=='install':
         apply(sbs.install, work_dirs)
     elif command=='test':
         apply(sbs.test, work_dirs)
     else: #build
+        if not args.no_logo_show:
+            display_logo()
         apply(sbs.build, work_dirs)
     pass
 
@@ -288,7 +289,7 @@ if __name__ == '__main__':
     try:
         parser = argparse.ArgumentParser(
             description='Simple Build System for VDM Capability Library.')
-        parser.add_argument('--display-logo', action='store_true', default=False)
+        parser.add_argument('--no-logo-show', action='store_true', default=False)
         subparsers = parser.add_subparsers(dest='command')
         init_subparsers(subparsers)
         #
