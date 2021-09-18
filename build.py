@@ -8,6 +8,7 @@ DBG = 1
 OUTPUT_DIRECTORY  = os.getenv('VDM_CAPABILITY_OUTPUT_DIRECTORY', './output')
 INSTALL_DIRECTORY = os.getenv('VDM_CAPABILITY_INSTALL_DIRECTORY', '~/.vdm/capability')
 POSIX = lambda x: x.as_posix()
+SHELL_RUN = lambda x: sp.run(x, capture_output=True, check=True, shell=True)
 
 class TypeWriter:
     def __init__(self):
@@ -87,19 +88,15 @@ class SimpleBuildSystem:
                 self.__install_cargo(logger)
                 for arg in args:
                     logger.text = self._title%'cargo install %s'%arg
-                    sp.check_call(['bash', '-c', 'cargo install "%s"'%arg],
-                                    stdout=sp.PIPE, stderr=sp.PIPE)
-                    # logger.succeed()
+                    SHELL_RUN('cargo install "%s"'%arg)
             elif cmd=='pip':
                 self.__install_pip(logger)
                 for arg in args:
                     logger.text = self._title%'pip3 install %s'%arg
-                    sp.check_call(['bash', '-c', 'pip3 install "%s"'%arg],
-                                    stdout=sp.PIPE, stderr=sp.PIPE)
-                    # logger.succeed()
+                    SHELL_RUN('pip3 install "%s"'%arg)
             elif cmd=='conan':
                 self.__install_conan(logger)
-                raise Exception('Conan is not supported now')
+                raise Exception('Conan is not supported now.')
         pass
 
     def _copy_files(self, src_dir:Path, dst_dir:Path, logger=None):
@@ -114,7 +111,7 @@ class SimpleBuildSystem:
     def _exec_build(self, logger=None):
         for cmd in self.build_script:
             logger.text = self._title%'Building: %s'%cmd
-            sp.check_call(['bash', '-c', cmd], stdout=sp.PIPE, stderr=sp.PIPE)
+            SHELL_RUN(cmd)
             pass
         pass
 
@@ -184,7 +181,12 @@ class SimpleBuildSystem:
             #
             logger.text = self._title%'build pass.'
         except Exception as e:
-            msg = self._title%'build failed. ' + str(e)
+            if isinstance(e, sp.CalledProcessError):
+                msg = e.stderr.decode().lstrip('/bin/sh: 1: ')
+                msg = termcolor.colored(msg, 'red')
+            else:
+                msg = str(e)
+            msg = self._title%'build failed. ' + msg
             raise Exception(msg)
         pass
 
