@@ -268,10 +268,12 @@ def execute(sbs:SimpleBuildSystem, command:str, args):
         apply(sbs.install, work_dirs)
     elif command=='test':
         apply(sbs.test, work_dirs)
-    else: #build
-        if not args.no_logo_show:
+    elif command=='build' or command==None:
+        if command==None and not args.no_logo_show:
             display_logo()
         apply(sbs.build, work_dirs)
+    else:
+        pass
     pass
 
 def init_subparsers(subparsers):
