@@ -136,7 +136,7 @@ fn run_test() -> Result<(), std::io::Error> {
 
     println!("register: {}", register( app_name.clone() ));
     println!("dump: {:?}", dump( app_name.clone() ));
-    println!("unregister: {}", unregister( app_name.clone() ));
+    //println!("unregister: {}", unregister( app_name.clone() ));
 
     Ok(())
 }
