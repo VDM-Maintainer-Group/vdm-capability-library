@@ -47,7 +47,7 @@ static int comm_record_insert(struct comm_record_t *record, unsigned long pid, i
 
     // insert the record
     spin_lock(&record->lock);
-    ret = radix_tree_insert(p_fd_wd_rt, fd_wd_to_mark(fd,wd), pname);
+    ret = radix_tree_insert(p_fd_wd_rt, fd_wd_to_mark(fd,wd), pname); //FIXME: allocation failed
     spin_unlock(&record->lock);
     if (unlikely(ret<0))
     {
