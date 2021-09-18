@@ -182,11 +182,10 @@ class SimpleBuildSystem:
             logger.text = self._title%'build pass.'
         except Exception as e:
             if isinstance(e, sp.CalledProcessError):
-                msg = e.stderr.decode().lstrip('/bin/sh: 1: ')
-                msg = termcolor.colored(msg, 'red')
+                msg = e.stderr.decode().lstrip('/bin/sh: 1: ').rstrip()
             else:
                 msg = str(e)
-            msg = self._title%'build failed. ' + msg
+            msg = self._title%'build failed. ' + termcolor.colored(msg, 'red')
             raise Exception(msg)
         pass
 

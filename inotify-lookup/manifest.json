@@ -10,8 +10,8 @@
         },
         "script": [
             "cargo build --release",
-            "mkdir -p build; cd build; cmake ..; make",
-            "cd inofity-lookup-py; maturin build --release --manylinux off"
+            "mkdir -p build && cd build && cmake .. && make",
+            "cd inotify-lookup-py && maturin build --release --manylinux off"
         ],
         "output": [
             "./target/release/libinotify_lookup.so@libinotify_lookup.so",
