@@ -109,9 +109,17 @@ class SimpleBuildSystem:
         pass
 
     def _exec_build(self, logger=None):
-        for cmd in self.build_script:
+        for i, cmd in enumerate(self.build_script):
             logger.text = self._title%'Building: %s'%cmd
-            SHELL_RUN(cmd)
+            try:
+                SHELL_RUN(cmd)
+            except Exception as e:
+                if isinstance(e, sp.CalledProcessError):
+                    msg = e.stderr.decode().lstrip('/bin/sh: 1: ').rstrip()
+                    msg = f'\n[build.script] {i+1}: ' + msg 
+                else:
+                    msg = str(e)
+                raise Exception(msg)
             pass
         pass
 
@@ -181,11 +189,7 @@ class SimpleBuildSystem:
             #
             logger.text = self._title%'build pass.'
         except Exception as e:
-            if isinstance(e, sp.CalledProcessError):
-                msg = e.stderr.decode().lstrip('/bin/sh: 1: ').rstrip()
-            else:
-                msg = str(e)
-            msg = self._title%'build failed. ' + termcolor.colored(msg, 'red')
+            msg = self._title%'build failed. ' + termcolor.colored(str(e), 'red')
             raise Exception(msg)
         pass
 
