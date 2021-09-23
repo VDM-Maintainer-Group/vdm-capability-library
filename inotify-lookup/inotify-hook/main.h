@@ -9,6 +9,7 @@
 #include <linux/namei.h>
 #include <linux/string.h>
 #include <linux/types.h>
+#include <linux/fs_struct.h>
 //headers for utility functions
 #include <linux/list.h>
 #include <linux/radix-tree.h>
@@ -27,6 +28,9 @@
 #endif
 
 #define MAX_NUM_WATCH 1000
+
+#define BUF_BEGIN(name, size) name=kmalloc(size, GFP_ATOMIC); if (likely(name)) {
+#define BUF_END(name) kfree(name); }
 
 struct comm_list_t
 {

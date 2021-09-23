@@ -285,47 +285,49 @@ KHOOK_EXT(long, ORIGIN(inotify_add_watch), const struct pt_regs *);
 static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
 {
     int wd;
-    struct path path;
     unsigned int flags = 0;
-    char *buf; //[PATH_MAX];
-    char *pname=NULL, *precord=NULL;
+    //
+    struct path path;
+    char *buf1, *buf2;
+    char *proot=NULL, *pname=NULL;
+    //
+    char *precord=NULL;
     struct comm_list_item *item;
 
-    // decode the registers
+    /* call the original function */
+    wd = KHOOK_ORIGIN(ORIGIN(inotify_add_watch), regs);
+
+    /* decode the registers */
     int fd = (int) regs->di;
     const char __user *pathname = (char __user *) regs->si;
     u32 mask = (u32) regs->dx;
 
-    // call the original function
-    wd = KHOOK_ORIGIN(ORIGIN(inotify_add_watch), regs);
-    // get the pathname
+    /* get and insert the pathname record */
     if (!(mask & IN_DONT_FOLLOW))
         flags |= LOOKUP_FOLLOW;
     if (mask & IN_ONLYDIR)
         flags |= LOOKUP_DIRECTORY;
+    
     if ( wd>=0 && (item=comm_list_find(current->comm)) && (user_path_at(AT_FDCWD, pathname, flags, &path)==0) )
     {
-        buf = kmalloc(PATH_MAX, GFP_ATOMIC);
-        // get pname from `struct path`
-        if (likely(buf))
+        BUF_BEGIN(buf1, PATH_MAX);
+        BUF_BEGIN(buf2, PATH_MAX);
         {
-            pname = dentry_path_raw(path.dentry, buf, PATH_MAX);
+            // get pname from `struct path`
+            proot = dentry_path_raw(current->fs->root.dentry, buf1, PATH_MAX);
+            pname = dentry_path_raw(path.dentry, buf2, PATH_MAX);
             path_put(&path);
 
             // insert into comm_record
-            precord = kmalloc(strlen(pname), GFP_ATOMIC);
-            if (unlikely(!precord))
+            if (likely(( precord=kmalloc(PATH_MAX, GFP_ATOMIC) )))
             {
-                kfree(buf);
-                return -ENOMEM;
-            }
-            strcpy(precord, pname); //"pname" points to "buf[PATH_MAX]"
-            comm_record_insert(&item->record, task_pid_nr(current), fd, wd, precord);
-            // printh("%s, PID %d add (%d,%d): %s\n", current->comm, task_pid_nr(current), fd, wd, precord);
-
-            kfree(buf);
+                snprintf(precord, sizeof(precord), "%s%s", proot, pname);
+                comm_record_insert(&item->record, task_pid_nr(current), fd, wd, precord);
+                // printh("%s, PID %d add (%d,%d): %s\n", current->comm, task_pid_nr(current), fd, wd, precord);
+            } else { wd = -ENOMEM;}
         }
-        else { wd = -ENOMEM; }
+        BUF_END(buf2);
+        BUF_END(buf1);
     }
 
     return wd;
