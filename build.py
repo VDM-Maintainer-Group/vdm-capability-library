@@ -73,30 +73,55 @@ class SimpleBuildSystem:
         self.install_dir = Path(INSTALL_DIRECTORY).expanduser().resolve()
         pass
 
-    def __install_cargo(self, logger=None):
+    def __install_cargo(self):
+        try:
+            SHELL_RUN('which rustup cargo')
+        except:
+            try:
+                SHELL_RUN('curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y')
+            except:
+                raise Exception('Rustup installation failed.')
         pass
 
-    def __install_pip(self, logger=None):
+    def __install_pip(self):
+        try:
+            SHELL_RUN('which pip3')
+        except:
+            try:
+                SHELL_RUN('curl -sSf https://bootstrap.pypa.io/get-pip.py | python3 -c --')
+            except:
+                raise Exception('Rustup installation failed.')
         pass
 
-    def __install_conan(self, logger=None):
+    def __install_conan(self):
+        try:
+            SHELL_RUN('which conan')
+        except:
+            try:
+                SHELL_RUN('pip3 install conan')
+            except:
+                raise Exception('Conan installation failed.')
         pass
 
     def _check_dependency(self, dep_map:dict, logger=None):
         for cmd,args in dep_map.items():
             if cmd=='cargo':
-                self.__install_cargo(logger)
-                for arg in args:
-                    logger.text = self._title%'cargo install %s'%arg
-                    SHELL_RUN('cargo install "%s"'%arg)
+                self.__install_cargo()
+                _command = 'cargo install "%s"'
             elif cmd=='pip':
-                self.__install_pip(logger)
-                for arg in args:
-                    logger.text = self._title%'pip3 install %s'%arg
-                    SHELL_RUN('pip3 install "%s"'%arg)
+                self.__install_pip()
+                _command = 'pip3 install "%s"'
             elif cmd=='conan':
-                self.__install_conan(logger)
+                self.__install_conan()
                 raise Exception('Conan is not supported now.')
+            elif cmd=='apt':
+                _command = 'sudo apt install "%s"'
+            else:
+                return
+
+            for arg in args:
+                logger.text = self._title%_command%arg
+                SHELL_RUN(_command%arg)
         pass
 
     def _copy_files(self, src_dir:Path, dst_dir:Path, logger=None):
