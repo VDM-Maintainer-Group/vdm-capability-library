@@ -197,6 +197,7 @@ class SimpleBuildSystem:
         self.output = _output
         return manifest
 
+
     def build(self, logger=None):
         self._title = '[build] %s'
         try:
@@ -239,7 +240,7 @@ class SimpleBuildSystem:
             #
             logger.text = self._title%'Installed.'
         except Exception as e:
-            msg = self._title%'install failed. ' + str(e)
+            msg = self._title%'install failed. ' + termcolor.colored(str(e), 'red')
             raise Exception(msg)
         pass
 
@@ -251,7 +252,7 @@ class SimpleBuildSystem:
             #
             logger.text = self._title%'test pass.'
         except Exception as e:
-            msg = self._title%'test failed. ' + str(e)
+            msg = self._title%'test failed. ' + termcolor.colored(str(e), 'red')
             raise Exception(msg)
         pass
 
