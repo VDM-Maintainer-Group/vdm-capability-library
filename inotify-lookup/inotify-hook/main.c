@@ -192,6 +192,7 @@ static struct comm_list_item * comm_list_find(const char *name)
 
 int comm_list_add_by_name(const char *name)
 {
+    int ret;
     struct comm_list_item *item;
 
     // check duplicated allocations
@@ -199,11 +200,10 @@ int comm_list_add_by_name(const char *name)
     {
         return 0;
     }
-
-    // allocate memory
-    item = kmalloc(sizeof(struct comm_list_item), GFP_KERNEL);
-    if (likely(item))
+    
+    BUF_BEGIN(item, sizeof(struct comm_list_item))
     {
+        // allocate memory
         item->comm_name = kmalloc(strlen(name), GFP_KERNEL);
         if (likely(item->comm_name))
         {
@@ -211,16 +211,22 @@ int comm_list_add_by_name(const char *name)
             strcpy(item->comm_name, name);
             comm_record_init(&item->record);
             INIT_LIST_HEAD(&item->node);
+
             // add onto comm_list
             spin_lock(&comm_list.lock);
             list_add(&item->node, &comm_list.head);
             spin_unlock(&comm_list.lock);
             printh("comm_list add \"%s\"\n", name);
-            return 0;
-        }
-        else{ kfree(item); return -ENOMEM; }
+            ret = 0;
+        } else { ret = -ENOMEM; }
     }
-    else { return -ENOMEM; }
+    BUF_ELSE(item)
+    {
+        ret = -ENOMEM;
+    }
+    BUF_END(item);
+
+    return ret;
 }
 
 static void comm_list_rm(struct comm_list_item *item)
@@ -310,8 +316,7 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
     
     if ( wd>=0 && (item=comm_list_find(current->comm)) && (user_path_at(AT_FDCWD, pathname, flags, &path)==0) )
     {
-        BUF_BEGIN(buf1, PATH_MAX);
-        BUF_BEGIN(buf2, PATH_MAX);
+        BUF_BEGIN(buf1, PATH_MAX); BUF_BEGIN(buf2, PATH_MAX)
         {
             // get pname from `struct path`
             proot = dentry_path_raw(current->fs->root.dentry, buf1, PATH_MAX);
@@ -326,8 +331,7 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
                 // printh("%s, PID %d add (%d,%d): %s\n", current->comm, task_pid_nr(current), fd, wd, precord);
             } else { wd = -ENOMEM;}
         }
-        BUF_END(buf2);
-        BUF_END(buf1);
+        BUF_END(buf2); BUF_END(buf1);
     }
 
     return wd;
