@@ -27,7 +27,7 @@
             "pkexec insmod kmod/inotify_hook.ko"
         ],
         "disable": [
-            "pkexec rmmod kmod/inotify_hook"
+            "pkexec rmmod inotify_hook"
         ]
     },
 
