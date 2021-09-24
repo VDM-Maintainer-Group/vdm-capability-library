@@ -130,7 +130,7 @@ class SimpleBuildSystem:
             _dst_path.parent.mkdir(parents=True, exist_ok=True)
             src_path = src_dir / src_file
             dst_path = _dst_path if dst_file else _dst_path.parent
-            shutil.copy( POSIX(src_path.resolve()), POSIX(dst_path.resolve()) )
+            SHELL_RUN( f'cp {POSIX(src_path.resolve())} {POSIX(dst_path.resolve())}' )
         pass
 
     def _exec_build(self, logger=None):
@@ -190,7 +190,7 @@ class SimpleBuildSystem:
         try:
             self.build_script = manifest['build']['script']
         except:
-            self.build_script = None
+            self.build_script = list()
         #
         _output = [x.split('@') for x in self.output]
         _output = [(x[0],None) if len(x)==1 else (x[0],x[1]) for x in _output]
