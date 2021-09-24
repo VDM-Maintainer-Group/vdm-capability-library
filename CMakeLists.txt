@@ -10,7 +10,7 @@ ExternalProject_Add(
     CONFIGURE_COMMAND pip3 install halo pyyaml
     BUILD_IN_SOURCE true
     BUILD_ALWAYS true
-    BUILD_COMMAND python3 build.py build --display-logo
+    BUILD_COMMAND python3 build.py build
     INSTALL_COMMAND "" #python3 build.py install
     TEST_COMMAND "" #python3 build.py test
     LOG_BUILD ON
