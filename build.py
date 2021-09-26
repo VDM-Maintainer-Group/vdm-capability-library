@@ -5,10 +5,15 @@ import halo, termcolor, yaml
 import json
 
 DBG = 1
-OUTPUT_DIRECTORY  = os.getenv('VDM_CAPABILITY_OUTPUT_DIRECTORY', './output')
-INSTALL_DIRECTORY = os.getenv('VDM_CAPABILITY_INSTALL_DIRECTORY', '~/.vdm/capability')
 POSIX = lambda x: x.as_posix()
 SHELL_RUN = lambda x: sp.run(x, capture_output=True, check=True, shell=True)
+
+OUTPUT_DIRECTORY  = os.getenv('VDM_CAPABILITY_OUTPUT_DIRECTORY',
+                        POSIX( Path('./output').resolve() ))
+INSTALL_DIRECTORY = os.getenv('VDM_CAPABILITY_INSTALL_DIRECTORY',
+                        POSIX( Path('~/.vdm/capability').expanduser() ))
+if os.getenv('SBS_EXECUTABLE') is None:
+    os.environ['SBS_EXECUTABLE'] = POSIX( Path(__file__).resolve() )
 
 class TypeWriter:
     def __init__(self):
@@ -69,8 +74,13 @@ class WorkSpace:
 
 class SimpleBuildSystem:
     def __init__(self):
-        self.output_dir = Path(OUTPUT_DIRECTORY).expanduser().resolve()
-        self.install_dir = Path(INSTALL_DIRECTORY).expanduser().resolve()
+        self.output_dir = Path(OUTPUT_DIRECTORY)
+        self.install_dir = Path(INSTALL_DIRECTORY)
+
+        os.environ['LD_LIBRARY_PATH'] = f"{os.getenv('LD_LIBRARY_PATH','')}:{self.install_dir}"
+        os.environ['PYTHONPATH'] = f"{os.getenv('PYTHONPATH','')}:{self.install_dir}"
+        os.environ['CPATH'] = f"{os.getenv('CPATH','')}:{self.install_dir}/include"
+        os.environ['LIBRARY_PATH'] = f"{os.getenv('LIBRARY_PATH','')}:{self.install_dir}"
         pass
 
     def __install_cargo(self):
@@ -116,6 +126,8 @@ class SimpleBuildSystem:
                 raise Exception('Conan is not supported now.')
             elif cmd=='apt':
                 _command = 'sudo apt install "%s"'
+            elif cmd=='sbs':
+                _command = '$SBS_EXECUTABLE install "%s"'
             else:
                 return
 
@@ -224,6 +236,12 @@ class SimpleBuildSystem:
         try:
             manifest = self.load_manifest()
             self._title = '[%s] %s'%(self.name, '%s')
+            # check build outputs
+            logger.text = self._title%'Check building results ...'
+            try:
+                self._copy_files(Path('.'), self.output_dir)
+            except:
+                self.build(logger)
             #
             logger.text = self._title%'Check runtime dependency ...'
             self._check_dependency(self.runtime_dependency, logger)
@@ -249,6 +267,14 @@ class SimpleBuildSystem:
         try:
             self.load_manifest()
             self._title = '[%s] %s'%(self.name, '%s')
+            # check build outputs
+            logger.text = self._title%'Check building results ...'
+            try:
+                self._copy_files(Path('.'), self.output_dir)
+            except:
+                self.build(logger)
+            #
+            #TODO: no test procedure provided now
             #
             logger.text = self._title%'test pass.'
         except Exception as e:
