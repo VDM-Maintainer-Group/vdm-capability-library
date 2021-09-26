@@ -344,17 +344,21 @@ def init_subparsers(subparsers):
     p_test.add_argument('names', metavar='name', nargs='*')
     pass
 
+def main():
+    parser = argparse.ArgumentParser(
+        description='Simple Build System for VDM Capability Library.')
+    parser.add_argument('--no-logo-show', action='store_true', default=False)
+    subparsers = parser.add_subparsers(dest='command')
+    init_subparsers(subparsers)
+    #
+    args = parser.parse_args()
+    sbs = SimpleBuildSystem()
+    execute(sbs, args.command, args)
+    pass
+
 if __name__ == '__main__':
     try:
-        parser = argparse.ArgumentParser(
-            description='Simple Build System for VDM Capability Library.')
-        parser.add_argument('--no-logo-show', action='store_true', default=False)
-        subparsers = parser.add_subparsers(dest='command')
-        init_subparsers(subparsers)
-        #
-        args = parser.parse_args()
-        sbs = SimpleBuildSystem()
-        execute(sbs, args.command, args)
+        main()
     except Exception as e:
         raise e if DBG else ''
     finally:
