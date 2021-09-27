@@ -136,13 +136,17 @@ class SimpleBuildSystem:
                 SHELL_RUN(_command%arg)
         pass
 
-    def _copy_files(self, src_dir:Path, dst_dir:Path, logger=None):
+    def _copy_files(self, src_dir:Path, dst_dir:Path):
         for src_file,dst_file in self.output:
             _dst_path = dst_dir/(dst_file if dst_file else src_file)
             _dst_path.parent.mkdir(parents=True, exist_ok=True)
             src_path = src_dir / src_file
             dst_path = _dst_path if dst_file else _dst_path.parent
             SHELL_RUN( f'cp {POSIX(src_path.resolve())} {POSIX(dst_path.resolve())}' )
+        pass
+
+    def _move_files(self, src_dir:Path, dst_dir:Path=None, ignore=True):
+        #TODO: support move and safe-remove files
         pass
 
     def _exec_build(self, logger=None):
@@ -262,6 +266,26 @@ class SimpleBuildSystem:
             raise Exception(msg)
         pass
 
+    def uninstall(self, logger=None):
+        self._title = '[install] %s'
+        try:
+            _manifest = self.load_manifest()
+            self._title = '[%s] %s'%(self.name, '%s')
+            #
+            logger.text = self._title%'Uninstalling ...'
+            _output = [x[1] if x[1] else x[0] for x in self.output]
+            _output.append( POSIX(Path(self.name)/'.conf') )
+            self.output = _output
+            self._move_files(self.install_dir, None, ignore=True)
+            # cleanup empty folders
+            SHELL_RUN(f'find {self.install_dir} -type d -empty -delete')
+            #
+            logger.text = self._title%'Uninstalled.'
+        except Exception as e:
+            msg = self._title%'uninstall failed.' + termcolor.colored(str(e), 'red')
+            raise Exception(msg)
+        pass
+
     def test(self, logger=None):
         self._title = '[test] %s'
         try:
@@ -313,11 +337,8 @@ def apply(executor, work_dirs):
         pass
     pass
 
-def execute(sbs:SimpleBuildSystem, command:str, args):
+def execute(sbs:SimpleBuildSystem, command:str, work_dirs, logo_show_flag):
     assert( isinstance(sbs, SimpleBuildSystem) )
-    work_dirs = getattr(args, 'names', [])
-    work_dirs = validate_work_dirs(work_dirs)
-
     if len(work_dirs)==0:
         return
     
@@ -326,11 +347,16 @@ def execute(sbs:SimpleBuildSystem, command:str, args):
     elif command=='test':
         apply(sbs.test, work_dirs)
     elif command=='build' or command==None:
-        if command==None and not args.no_logo_show:
+        if command==None and logo_show_flag:
             display_logo()
         apply(sbs.build, work_dirs)
     else:
         pass
+    pass
+
+def sbs_entry(command, work_dirs, logo_show_flag=False):
+    sbs = SimpleBuildSystem()
+    execute(sbs, command, work_dirs, logo_show_flag)
     pass
 
 def init_subparsers(subparsers):
@@ -352,8 +378,10 @@ def main():
     init_subparsers(subparsers)
     #
     args = parser.parse_args()
-    sbs = SimpleBuildSystem()
-    execute(sbs, args.command, args)
+    work_dirs = getattr(args, 'names', [])
+    work_dirs = validate_work_dirs(work_dirs)
+    logo_show_flag = not args.no_logo_show
+    sbs_entry(args.command, work_dirs, logo_show_flag)
     pass
 
 if __name__ == '__main__':
