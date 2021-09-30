@@ -264,10 +264,12 @@ class SimpleBuildSystem:
             try:
                 self._copy_files(Path('.'), self.output_dir)
             except:
-                _stat = logger.enabled
-                logger.enabled = True
-                self.build(logger)
-                logger.enabled = _stat
+                if logger.enabled:
+                    self.build(logger)
+                else:
+                    logger.enabled = True; logger.start()
+                    self.build(logger); logger.succeed()
+                    logger.enabled = False
             #
             logger.text = self._title%'Check runtime dependency ...'
             self._check_dependency(self.runtime_dependency, logger)
