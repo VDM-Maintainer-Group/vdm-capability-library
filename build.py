@@ -72,6 +72,9 @@ class WorkSpace:
         pass
     pass
 
+class NoneLogger:
+    __slots__ = ['text', 'enabled']
+
 class SimpleBuildSystem:
     def __init__(self):
         self.output_dir = Path(OUTPUT_DIRECTORY)
@@ -113,7 +116,7 @@ class SimpleBuildSystem:
                 raise Exception('Conan installation failed.')
         pass
 
-    def _check_dependency(self, dep_map:dict, logger=None):
+    def _check_dependency(self, dep_map:dict, logger=NoneLogger):
         for cmd,args in dep_map.items():
             if cmd=='cargo':
                 self.__install_cargo()
@@ -157,7 +160,7 @@ class SimpleBuildSystem:
         self.__output_files('rm -rf', Path(src_dir), Path(dst_dir), ignore)
         pass
 
-    def _exec_build(self, logger=None):
+    def _exec_build(self, logger=NoneLogger):
         for i, cmd in enumerate(self.build_script):
             logger.text = self._title%'Building: %s'%cmd
             try:
@@ -230,7 +233,7 @@ class SimpleBuildSystem:
         return manifest
 
 
-    def build(self, logger=None):
+    def build(self, logger=NoneLogger):
         self._title = '[build] %s'
         try:
             self.load_manifest()
@@ -251,7 +254,7 @@ class SimpleBuildSystem:
             raise Exception(msg)
         pass
 
-    def install(self, logger=None):
+    def install(self, logger=NoneLogger):
         self._title = '[install] %s'
         try:
             manifest = self.load_manifest()
@@ -261,7 +264,10 @@ class SimpleBuildSystem:
             try:
                 self._copy_files(Path('.'), self.output_dir)
             except:
+                _stat = logger.enabled
+                logger.enabled = True
                 self.build(logger)
+                logger.enabled = _stat
             #
             logger.text = self._title%'Check runtime dependency ...'
             self._check_dependency(self.runtime_dependency, logger)
@@ -282,7 +288,7 @@ class SimpleBuildSystem:
             raise Exception(msg)
         pass
 
-    def uninstall(self, logger=None):
+    def uninstall(self, logger=NoneLogger):
         self._title = '[uninstall] %s'
         try:
             _manifest = self.load_config_file()
@@ -303,7 +309,7 @@ class SimpleBuildSystem:
             raise Exception(msg)
         pass
 
-    def test(self, logger=None):
+    def test(self, logger=NoneLogger):
         self._title = '[test] %s'
         try:
             self.load_manifest()
