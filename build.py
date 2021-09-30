@@ -346,24 +346,30 @@ def validate_work_dirs(command:str, work_dirs:list):
             work_dirs = list( filter(examiner, work_dirs) )
     return work_dirs
 
-def apply(executor, work_dirs, enable_halo=False) -> bool:
+def apply(executor, work_dirs, enable_halo=False):
+    ret = list()
+
     for _dir in work_dirs:
-        with halo.Halo('Simple Build System', enabled=enable_halo) as logger:
-            with WorkSpace(_dir):
-                try:
-                    executor(logger)
-                except Exception as e:
-                    logger.fail(text=str(e))
-                    return False
-                else:
-                    logger.succeed()
-                    return True
-    pass
+        try:
+            with halo.Halo('Simple Build System', enabled=enable_halo) as logger:
+                with WorkSpace(_dir):
+                    try:
+                        executor(logger)
+                    except Exception as e:
+                        logger.fail(text=str(e))
+                        ret.append( str(e) )
+                    else:
+                        logger.succeed()
+                        ret.append( True )
+        except:
+            ret.append(False)
+    
+    return ret
 
 def execute(sbs:SimpleBuildSystem, command:str, work_dirs, logo_show_flag, enable_halo):
     assert( isinstance(sbs, SimpleBuildSystem) )
     if len(work_dirs)==0:
-        return
+        return None
     
     if command=='install':
         return apply(sbs.install, work_dirs, enable_halo)
@@ -376,7 +382,7 @@ def execute(sbs:SimpleBuildSystem, command:str, work_dirs, logo_show_flag, enabl
             display_logo()
         return apply(sbs.build, work_dirs, enable_halo)
     else:
-        pass
+        return None
     pass
 
 def sbs_entry(command, work_dirs, logo_show_flag=False, enable_halo=False):
