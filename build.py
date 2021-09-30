@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-import os, sys, time, shutil, argparse, subprocess as sp
+import os, sys, time, argparse, subprocess as sp
 from pathlib import Path
-import halo, termcolor, yaml
-import json
+import json, yaml, tempfile
+import halo, termcolor
 
 DBG = 1
 POSIX = lambda x: x.as_posix()
@@ -136,17 +136,25 @@ class SimpleBuildSystem:
                 SHELL_RUN(_command%arg)
         pass
 
-    def _copy_files(self, src_dir:Path, dst_dir:Path):
+    def __output_files(self, cmd:str, src_dir:Path, dst_dir:Path, ignore:bool):
         for src_file,dst_file in self.output:
-            _dst_path = dst_dir/(dst_file if dst_file else src_file)
-            _dst_path.parent.mkdir(parents=True, exist_ok=True)
-            src_path = src_dir / src_file
-            dst_path = _dst_path if dst_file else _dst_path.parent
-            SHELL_RUN( f'cp {POSIX(src_path.resolve())} {POSIX(dst_path.resolve())}' )
+            try:
+                _dst_path = dst_dir/(dst_file if dst_file else src_file)
+                _dst_path.parent.mkdir(parents=True, exist_ok=True)
+                src_path = src_dir / src_file
+                dst_path = _dst_path if dst_file else _dst_path.parent
+                SHELL_RUN( f'{cmd} {POSIX(src_path.resolve())} {POSIX(dst_path.resolve())}' )
+            except Exception as e:
+                if not ignore: raise e
         pass
 
-    def _move_files(self, src_dir:Path, dst_dir:Path=None, ignore=True):
-        #TODO: support move and safe-remove files
+    def _copy_files(self, src_dir:Path, dst_dir:Path, ignore=False):
+        self.__output_files('cp -r', Path(src_dir), Path(dst_dir), ignore)
+        pass
+
+    def _remove_files(self, src_dir:Path, ignore=True):
+        dst_dir = tempfile.TemporaryDirectory().name
+        self.__output_files('rm -rf', Path(src_dir), Path(dst_dir), ignore)
         pass
 
     def _exec_build(self, logger=None):
@@ -186,6 +194,14 @@ class SimpleBuildSystem:
             yaml.dump(cfg, cfg_file)
         pass
 
+    def load_config_file(self):
+        with open(Path('.conf')) as fd:
+            config = yaml.load(fd, Loader=yaml.CLoader)
+        self.name = Path('.').resolve().name
+        self.entry = config['entry']
+        self.output = [(_file,None) for _file in config['files']]
+        pass
+
     def load_manifest(self):
         with open(Path('./manifest.json')) as fd:
             manifest = json.load( fd )
@@ -198,11 +214,11 @@ class SimpleBuildSystem:
         try:
             self.build_dependency = manifest['build']['dependency']
         except:
-            self.build_dependency = None
+            self.build_dependency = dict()
         try:
             self.runtime_dependency = manifest['runtime']['dependency']
         except:
-            self.runtime_dependency = None
+            self.runtime_dependency = dict()
         try:
             self.build_script = manifest['build']['script']
         except:
@@ -267,22 +283,23 @@ class SimpleBuildSystem:
         pass
 
     def uninstall(self, logger=None):
-        self._title = '[install] %s'
+        self._title = '[uninstall] %s'
         try:
-            _manifest = self.load_manifest()
+            _manifest = self.load_config_file()
             self._title = '[%s] %s'%(self.name, '%s')
             #
             logger.text = self._title%'Uninstalling ...'
-            _output = [x[1] if x[1] else x[0] for x in self.output]
-            _output.append( POSIX(Path(self.name)/'.conf') )
+            _output = [POSIX( Path('..', x[1] if x[1] else x[0]) ) for x in self.output]
+            _output.append('.conf')
+            _output = [(x,None) for x in _output]
             self.output = _output
-            self._move_files(self.install_dir, None, ignore=True)
+            self._remove_files(Path('.'), ignore=True)
             # cleanup empty folders
             SHELL_RUN(f'find {self.install_dir} -type d -empty -delete')
             #
             logger.text = self._title%'Uninstalled.'
         except Exception as e:
-            msg = self._title%'uninstall failed.' + termcolor.colored(str(e), 'red')
+            msg = self._title%'uninstall failed. ' + termcolor.colored(str(e), 'red')
             raise Exception(msg)
         pass
 
@@ -315,48 +332,57 @@ def display_logo():
         tw.write([''], duration=100)
     pass
 
-def validate_work_dirs(work_dirs:list):
-    examiner = lambda _path: _path.is_dir() and (_path/'manifest.json').exists()
-    if len(work_dirs)==0:
-        work_dirs = list( filter(examiner, Path('./').glob('*')) )
-    else:
-        work_dirs = [Path(_dir) for _dir in work_dirs]
+def validate_work_dirs(command:str, work_dirs:list):
+    if command=='uninstall':
+        examiner = lambda _path: _path.is_dir() and (_path/'.conf').exists()
+        work_dirs = [Path(INSTALL_DIRECTORY)/Path(_dir) for _dir in work_dirs]
         work_dirs = list( filter(examiner, work_dirs) )
+    else:
+        examiner = lambda _path: _path.is_dir() and (_path/'manifest.json').exists()
+        if len(work_dirs)==0:
+            work_dirs = list( filter(examiner, Path('./').glob('*')) )
+        else:
+            work_dirs = [Path(_dir) for _dir in work_dirs]
+            work_dirs = list( filter(examiner, work_dirs) )
     return work_dirs
 
-def apply(executor, work_dirs):
+def apply(executor, work_dirs, enable_halo=False) -> bool:
     for _dir in work_dirs:
-        with halo.Halo('Simple Build System') as logger:
+        with halo.Halo('Simple Build System', enabled=enable_halo) as logger:
             with WorkSpace(_dir):
                 try:
                     executor(logger)
                 except Exception as e:
                     logger.fail(text=str(e))
+                    return False
                 else:
                     logger.succeed()
+                    return True
         pass
     pass
 
-def execute(sbs:SimpleBuildSystem, command:str, work_dirs, logo_show_flag):
+def execute(sbs:SimpleBuildSystem, command:str, work_dirs, logo_show_flag, enable_halo):
     assert( isinstance(sbs, SimpleBuildSystem) )
     if len(work_dirs)==0:
         return
     
     if command=='install':
-        apply(sbs.install, work_dirs)
+        apply(sbs.install, work_dirs, enable_halo)
+    elif command=='uninstall':
+        apply(sbs.uninstall, work_dirs, enable_halo)
     elif command=='test':
-        apply(sbs.test, work_dirs)
+        apply(sbs.test, work_dirs, enable_halo)
     elif command=='build' or command==None:
         if command==None and logo_show_flag:
             display_logo()
-        apply(sbs.build, work_dirs)
+        apply(sbs.build, work_dirs, enable_halo)
     else:
         pass
     pass
 
-def sbs_entry(command, work_dirs, logo_show_flag=False):
+def sbs_entry(command, work_dirs, logo_show_flag=False, enable_halo=False):
     sbs = SimpleBuildSystem()
-    execute(sbs, command, work_dirs, logo_show_flag)
+    execute(sbs, command, work_dirs, logo_show_flag, enable_halo)
     pass
 
 def init_subparsers(subparsers):
@@ -365,6 +391,9 @@ def init_subparsers(subparsers):
     #
     p_install = subparsers.add_parser('install')
     p_install.add_argument('names', metavar='name', nargs='*')
+    #
+    p_uninstall = subparsers.add_parser('uninstall')
+    p_uninstall.add_argument('names', metavar='name', nargs=1)
     #
     p_test = subparsers.add_parser('test')
     p_test.add_argument('names', metavar='name', nargs='*')
@@ -379,9 +408,9 @@ def main():
     #
     args = parser.parse_args()
     work_dirs = getattr(args, 'names', [])
-    work_dirs = validate_work_dirs(work_dirs)
+    work_dirs = validate_work_dirs(args.command, work_dirs)
     logo_show_flag = not args.no_logo_show
-    sbs_entry(args.command, work_dirs, logo_show_flag)
+    sbs_entry(args.command, work_dirs, logo_show_flag, True)
     pass
 
 if __name__ == '__main__':
