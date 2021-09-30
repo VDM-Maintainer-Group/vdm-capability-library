@@ -358,7 +358,6 @@ def apply(executor, work_dirs, enable_halo=False) -> bool:
                 else:
                     logger.succeed()
                     return True
-        pass
     pass
 
 def execute(sbs:SimpleBuildSystem, command:str, work_dirs, logo_show_flag, enable_halo):
@@ -367,23 +366,22 @@ def execute(sbs:SimpleBuildSystem, command:str, work_dirs, logo_show_flag, enabl
         return
     
     if command=='install':
-        apply(sbs.install, work_dirs, enable_halo)
+        return apply(sbs.install, work_dirs, enable_halo)
     elif command=='uninstall':
-        apply(sbs.uninstall, work_dirs, enable_halo)
+        return apply(sbs.uninstall, work_dirs, enable_halo)
     elif command=='test':
-        apply(sbs.test, work_dirs, enable_halo)
+        return apply(sbs.test, work_dirs, enable_halo)
     elif command=='build' or command==None:
         if command==None and logo_show_flag:
             display_logo()
-        apply(sbs.build, work_dirs, enable_halo)
+        return apply(sbs.build, work_dirs, enable_halo)
     else:
         pass
     pass
 
 def sbs_entry(command, work_dirs, logo_show_flag=False, enable_halo=False):
     sbs = SimpleBuildSystem()
-    execute(sbs, command, work_dirs, logo_show_flag, enable_halo)
-    pass
+    return execute(sbs, command, work_dirs, logo_show_flag, enable_halo)
 
 def init_subparsers(subparsers):
     p_build = subparsers.add_parser('build')
