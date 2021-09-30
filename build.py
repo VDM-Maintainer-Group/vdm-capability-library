@@ -387,6 +387,7 @@ def execute(sbs:SimpleBuildSystem, command:str, work_dirs, logo_show_flag, enabl
 
 def sbs_entry(command, work_dirs, logo_show_flag=False, enable_halo=False):
     sbs = SimpleBuildSystem()
+    work_dirs = validate_work_dirs(command, work_dirs)
     return execute(sbs, command, work_dirs, logo_show_flag, enable_halo)
 
 def init_subparsers(subparsers):
@@ -412,7 +413,6 @@ def main():
     #
     args = parser.parse_args()
     work_dirs = getattr(args, 'names', [])
-    work_dirs = validate_work_dirs(args.command, work_dirs)
     logo_show_flag = not args.no_logo_show
     sbs_entry(args.command, work_dirs, logo_show_flag, True)
     pass
