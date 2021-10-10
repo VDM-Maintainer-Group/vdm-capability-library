@@ -7,12 +7,6 @@
 #include "rapidjson/stringbuffer.h"
 
 #define string (const char *)
-#define __is_type(x, _type) (strncmp(x,_type,strlen(_type))==0)
-#define is_int(x) (__is_type(x, "int") || __is_type(x, "uint"))
-#define is_double(x) (__is_type(x, "float") || __is_type(x, "double"))
-#define is_bool(x) (__is_type(x, "bool"))
-#define is_char false
-#define is_string false
 
 using namespace rapidjson;
 
