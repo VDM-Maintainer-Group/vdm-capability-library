@@ -103,7 +103,7 @@ class SimpleBuildSystem:
             try:
                 SHELL_RUN('curl -sSf https://bootstrap.pypa.io/get-pip.py | python3 -c --')
             except:
-                raise Exception('Rustup installation failed.')
+                raise Exception('pip3 installation failed.')
         pass
 
     def __install_conan(self):
