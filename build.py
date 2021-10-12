@@ -54,7 +54,7 @@ class WorkSpace:
         else:
             self.forceUpdate = False
         pass
-    
+
     def __enter__(self):
         if not Path(self.wrk).is_dir():
             if self.forceUpdate:
@@ -101,7 +101,7 @@ class SimpleBuildSystem:
             SHELL_RUN('which pip3')
         except:
             try:
-                SHELL_RUN('curl -sSf https://bootstrap.pypa.io/get-pip.py | python3 -c --')
+                SHELL_RUN('python3 < <(curl -sSf https://bootstrap.pypa.io/get-pip.py)')
             except:
                 raise Exception('pip3 installation failed.')
         pass
