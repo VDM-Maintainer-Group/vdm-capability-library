@@ -2,7 +2,7 @@
 name = "inotify-lookup-py"
 version = "0.2.0"
 authors = ["iamhyc <sudofree@163.com>"]
-edition = "2018"
+edition = "2021"
 
 [lib]
 name = "inotify_lookup_py"
