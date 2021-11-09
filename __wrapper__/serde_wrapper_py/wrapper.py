@@ -6,7 +6,7 @@ def jsonify(func):
 
     @wraps(func)
     def _wrap(kwargs):
-        for (k,v) in kwargs.iter():
+        for (k,v) in kwargs.items():
             kwargs[k] = json.loads(v)
         res = json.dumps( func(**kwargs) )
         return res
