@@ -24,16 +24,18 @@ int append_message_cb(int pid, char *pathname, void *data)
     NETLINK_CB(msg_buf->skb).dst_group = 0; /* not in mcast group */
 
     // allocate buffer in skb
-    buf = kmalloc(PATH_MAX, GFP_ATOMIC);
+    TRY_BUF( buf, PATH_MAX ) {
         sprintf(buf, "%d,%s", pid, pathname);
         nlh = nlmsg_put(msg_buf->skb, 0, msg_buf->seq, NLMSG_MIN_TYPE, strlen(buf), NLM_F_MULTI);
-        if (unlikely(!nlh))
-        {
+        if (unlikely(!nlh)) {
             ret = -EMSGSIZE;
-            goto out;
+        } else {
+            strncpy(nlmsg_data(nlh), buf, strlen(buf));
         }
-        strncpy(nlmsg_data(nlh), buf, strlen(buf));
-    kfree(buf);
+    } ELSE_BUF( buf, FREE_BUF ) {
+        ret = -ENOMEM;
+    } END_BUF;
+    if (ret<0) goto out;
 
     //finalize current nlh and unicast
     nlmsg_end(msg_buf->skb, nlh);

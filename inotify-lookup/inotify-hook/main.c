@@ -36,7 +36,7 @@ static int comm_record_insert(struct comm_record_t *record, unsigned long pid, i
 
             if (unlikely(ret<0))
             {
-                printh("[comm_record] pid_rt allocation failed for %ld.\n", pid);
+                printh("[comm_record] `pid_rt` insertion failed for %ld.\n", pid);
                 return ret;
             }
         } ELSE_BUF( p_fd_wd_rt, KEEP_BUF ) {            //NOTE: keep `p_fd_wd_rt`
@@ -50,7 +50,7 @@ static int comm_record_insert(struct comm_record_t *record, unsigned long pid, i
     spin_unlock(&record->lock);
     if (unlikely(ret<0))
     {
-        printh("[comm_record] fd_wd_rt allocation failed for %d, %d.\n", fd_wd_to_mark(fd,wd), ret);
+        printh("[comm_record] `fd_wd_rt` insertion failed for %ld, %d.\n", fd_wd_to_mark(fd,wd), ret);
         return ret;
     } ///else { printh("[comm_record] add %d.\n", fd_wd_to_mark(fd,wd)); }
 
