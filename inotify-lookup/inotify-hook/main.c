@@ -60,7 +60,7 @@ static int comm_record_insert(struct comm_record_t *record, unsigned long pid, i
 static void comm_record_remove(struct comm_record_t *record, unsigned long pid, int fd, u32 wd)
 {
     int mark;
-    char *pathname;
+    char *precord;
     struct radix_tree_root *p_fd_wd_rt;
 
     p_fd_wd_rt = (struct radix_tree_root *) radix_tree_lookup(&record->pid_rt, pid);
@@ -70,8 +70,8 @@ static void comm_record_remove(struct comm_record_t *record, unsigned long pid, 
     }
 
     mark = fd_wd_to_mark(fd,wd);
-    pathname = (char *) radix_tree_lookup(p_fd_wd_rt, mark);
-    if (!pathname)
+    precord = (char *) radix_tree_lookup(p_fd_wd_rt, mark);
+    if (!precord)
     {
         goto out;
     }
@@ -79,7 +79,7 @@ static void comm_record_remove(struct comm_record_t *record, unsigned long pid, 
     spin_lock(&record->lock);
     {
         // free record of fd_wd_rt
-        kfree(pathname);
+        kfree(precord);
         radix_tree_delete(p_fd_wd_rt, mark);
         // free record of pid_rt
         if (radix_tree_empty(p_fd_wd_rt))
@@ -94,7 +94,7 @@ out:
     return;
 }
 
-static int comm_record_dump(struct comm_record_t *record, int(*fn)(int pid, char *pathname, void *data), void *data)
+static int comm_record_dump(struct comm_record_t *record, int(*fn)(int pid, char *precord, void *data), void *data)
 {
     int ret = 0;
     struct radix_tree_iter iter0, iter1;
@@ -109,10 +109,10 @@ static int comm_record_dump(struct comm_record_t *record, int(*fn)(int pid, char
         {
             radix_tree_for_each_slot(slot1, p_fd_wd_rt, &iter1, 0)
             {
-                char *pathname = radix_tree_deref_slot(slot1);
-                if ( (ret = fn(iter0.index, pathname, data)) < 0 )
+                char *precord = radix_tree_deref_slot(slot1);
+                if ( (ret = fn(iter0.index, precord, data)) < 0 )
                 {
-                    // printh("%ld, %s\n", iter0.index, (char *)pathname);
+                    // printh("%ld, %s\n", iter0.index, (char *)precord);
                     goto out;
                 }
             }
@@ -123,7 +123,7 @@ out:
     return ret;
 }
 
-int comm_record_dump_by_name(const char *name, int(*fn)(int pid, char *pathname, void *data), void *data)
+int comm_record_dump_by_name(const char *name, int(*fn)(int pid, char *precord, void *data), void *data)
 {
     int ret = -1;
     struct comm_list_item *item;
@@ -157,9 +157,9 @@ static void comm_record_cleanup(struct comm_record_t *record)
         {
             radix_tree_for_each_slot(slot1, p_fd_wd_rt, &iter1, 0)
             {
-                void *pathname = radix_tree_deref_slot(slot1);
-                // printh("%ld, %s\n", iter0.index, (char *)pathname);
-                if (!radix_tree_exception(pathname)) {kfree(pathname);}
+                void *precord = radix_tree_deref_slot(slot1);
+                // printh("%ld, %s\n", iter0.index, (char *)precord);
+                if (!radix_tree_exception(precord)) {kfree(precord);}
                 radix_tree_iter_delete(p_fd_wd_rt, &iter1, slot1);
             }
         }
