@@ -292,6 +292,7 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
     char *buf1, *buf2;
     char *proot=NULL, *pname=NULL;
     //
+    int buf_len = 0;
     char *precord=NULL;
     struct comm_list_item *item;
 
@@ -319,8 +320,8 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
                 path_put(&path);
                 // insert into comm_record
                 TRY_BUF(precord, PATH_MAX)
-                    snprintf(precord, sizeof(precord), "%s%s", proot, pname); //FIXME: wrong pathname concatenation
-                    printh("%s\n", precord);
+                    buf_len = strlen(proot) + strlen(pname) + 2; //plus '/' and '\0'.
+                    snprintf(precord, buf_len, "%s/%s", proot, pname);
                     comm_record_insert(&item->record, task_pid_nr(current), fd, wd, precord);
                     // printh("%s, PID %d add (%d,%d): %s\n", current->comm, task_pid_nr(current), fd, wd, precord);
                 ELSE_BUF(precord, KEEP_BUF) {           //NOTE: keep `precord`
