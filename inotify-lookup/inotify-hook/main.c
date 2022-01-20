@@ -46,13 +46,13 @@ static int comm_record_insert(struct comm_record_t *record, unsigned long pid, i
 
     // insert the record
     spin_lock(&record->lock);
-    ret = radix_tree_insert(p_fd_wd_rt, fd_wd_to_mark(fd,wd), pname); //FIXME: allocation failed
+    ret = radix_tree_insert(p_fd_wd_rt, fd_wd_to_mark(fd,wd), pname);
     spin_unlock(&record->lock);
     if (unlikely(ret<0))
     {
-        printh("[comm_record] fd_wd_rt allocation failed for (%d, %d).\n", fd, wd);
+        printh("[comm_record] fd_wd_rt allocation failed for %d, %d.\n", fd_wd_to_mark(fd,wd), ret);
         return ret;
-    }
+    } ///else { printh("[comm_record] add %d.\n", fd_wd_to_mark(fd,wd)); }
 
     return 0;
 }

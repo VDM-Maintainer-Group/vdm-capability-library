@@ -27,8 +27,6 @@
 #error Target CPU architecture is NOT supported !!!
 #endif
 
-#define MAX_NUM_WATCH 1000
-
 #define FREE_BUF 0x1
 #define KEEP_BUF 0x0
 #define TRY_BUF(var, size)   var=kmalloc(size, GFP_KERNEL); if (likely(var)) {
@@ -45,7 +43,7 @@ struct comm_list_t
 struct comm_record_t
 {
     spinlock_t lock;
-    struct radix_tree_root pid_rt; //pid->(wd+fd*MAX_NUM_WATCH)->pathname
+    struct radix_tree_root pid_rt;
 };
 
 struct comm_list_item
@@ -57,7 +55,7 @@ struct comm_list_item
 
 static inline unsigned long fd_wd_to_mark(u32 fd, u32 wd)
 {
-    return wd*MAX_NUM_WATCH+fd;
+    return (wd<<20) + fd;
 }
 
 extern int comm_list_add_by_name(const char *);
