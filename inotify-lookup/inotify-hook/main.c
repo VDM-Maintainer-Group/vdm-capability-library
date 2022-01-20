@@ -319,7 +319,8 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
                 path_put(&path);
                 // insert into comm_record
                 TRY_BUF(precord, PATH_MAX)
-                    snprintf(precord, sizeof(precord), "%s%s", proot, pname);
+                    snprintf(precord, sizeof(precord), "%s%s", proot, pname); //FIXME: wrong pathname concatenation
+                    printh("%s\n", precord);
                     comm_record_insert(&item->record, task_pid_nr(current), fd, wd, precord);
                     // printh("%s, PID %d add (%d,%d): %s\n", current->comm, task_pid_nr(current), fd, wd, precord);
                 ELSE_BUF(precord, KEEP_BUF) {           //NOTE: keep `precord`
