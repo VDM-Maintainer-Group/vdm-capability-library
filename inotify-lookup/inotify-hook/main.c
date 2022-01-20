@@ -38,7 +38,7 @@ static int comm_record_insert(struct comm_record_t *record, unsigned long pid, i
 
             if (unlikely(ret<0))
             {
-                printh("comm_record: pid_rt allocation failed for %ld.\n", pid);
+                printh("[comm_record] pid_rt allocation failed for %ld.\n", pid);
                 return ret;
             }
         }
@@ -51,7 +51,7 @@ static int comm_record_insert(struct comm_record_t *record, unsigned long pid, i
     spin_unlock(&record->lock);
     if (unlikely(ret<0))
     {
-        printh("comm_record: fd_wd_rt allocation failed for (%d, %d).\n", fd, wd);
+        printh("[comm_record] fd_wd_rt allocation failed for (%d, %d).\n", fd, wd);
         return ret;
     }
 
@@ -201,8 +201,7 @@ int comm_list_add_by_name(const char *name)
         return 0;
     }
     
-    BUF_BEGIN(item, sizeof(struct comm_list_item))
-    {
+    TRY_BUF( item, sizeof(struct comm_list_item) )
         // allocate memory
         item->comm_name = kmalloc(strlen(name), GFP_KERNEL);
         if (likely(item->comm_name))
@@ -219,12 +218,9 @@ int comm_list_add_by_name(const char *name)
             printh("comm_list add \"%s\"\n", name);
             ret = 0;
         } else { ret = -ENOMEM; }
-    }
-    BUF_ELSE(item)
-    {
+    ELSE_BUF( item, FREE_BUF )
         ret = -ENOMEM;
-    }
-    BUF_END(item);
+    END_BUF
 
     return ret;
 }
@@ -316,22 +312,24 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
     
     if ( wd>=0 && (item=comm_list_find(current->comm)) && (user_path_at(AT_FDCWD, pathname, flags, &path)==0) )
     {
-        BUF_BEGIN(buf1, PATH_MAX); BUF_BEGIN(buf2, PATH_MAX)
-        {
-            // get pname from `struct path`
-            proot = dentry_path_raw(current->fs->root.dentry, buf1, PATH_MAX);
-            pname = dentry_path_raw(path.dentry, buf2, PATH_MAX);
-            path_put(&path);
+        TRY_BUF( buf1, PATH_MAX ) {
+            TRY_BUF( buf2, PATH_MAX ) {
 
-            // insert into comm_record
-            if (likely(( precord=kmalloc(PATH_MAX, GFP_ATOMIC) )))
-            {
-                snprintf(precord, sizeof(precord), "%s%s", proot, pname);
-                comm_record_insert(&item->record, task_pid_nr(current), fd, wd, precord);
-                // printh("%s, PID %d add (%d,%d): %s\n", current->comm, task_pid_nr(current), fd, wd, precord);
-            } else { wd = -ENOMEM;}
-        }
-        BUF_END(buf2); BUF_END(buf1);
+                // get pname from `struct path`
+                proot = dentry_path_raw(current->fs->root.dentry, buf1, PATH_MAX);
+                pname = dentry_path_raw(path.dentry,              buf2, PATH_MAX);
+                path_put(&path);
+                // insert into comm_record
+                TRY_BUF(precord, PATH_MAX)
+                    snprintf(precord, sizeof(precord), "%s%s", proot, pname);
+                    comm_record_insert(&item->record, task_pid_nr(current), fd, wd, precord);
+                    // printh("%s, PID %d add (%d,%d): %s\n", current->comm, task_pid_nr(current), fd, wd, precord);
+                ELSE_BUF(precord, KEEP_BUF) //NOTE: not free here
+                    wd = -ENOMEM;
+                END_BUF
+
+            } ELSE_BUF( buf2, FREE_BUF ); END_BUF
+        } ELSE_BUF( buf1, FREE_BUF ); END_BUF
     }
 
     return wd;

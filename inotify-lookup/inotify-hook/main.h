@@ -17,7 +17,7 @@
 
 #define IN_ONLYDIR		    0x01000000	/* only watch the path if it is a directory */
 #define IN_DONT_FOLLOW		0x02000000	/* don't follow a sym link */
-#define KERN_LOG KERN_NOTICE "[inotify_hook]"
+#define KERN_LOG KERN_NOTICE "inotify_hook: "
 #define printh(...) printk(KERN_LOG __VA_ARGS__)
 
 #ifdef CONFIG_X86_64
@@ -29,9 +29,11 @@
 
 #define MAX_NUM_WATCH 1000
 
-#define BUF_BEGIN(name, size) name=kmalloc(size, GFP_KERNEL); if (likely(name)) {
-#define BUF_ELSE(name) } else {
-#define BUF_END(name) kfree(name); }
+#define FREE_BUF 0x1
+#define KEEP_BUF 0x0
+#define TRY_BUF(var, size)   var=kmalloc(size, GFP_KERNEL); if (likely(var)) {
+#define ELSE_BUF(var, end)   if (end) kfree(var); } else {
+#define END_BUF              }
 
 struct comm_list_t
 {
