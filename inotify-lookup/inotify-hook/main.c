@@ -27,9 +27,7 @@ static int comm_record_insert(struct comm_record_t *record, unsigned long pid, i
     //create pid_rt if not exists
     if (!p_fd_wd_rt)
     {
-        p_fd_wd_rt = kmalloc(sizeof(struct radix_tree_root), GFP_KERNEL);
-        if (likely(p_fd_wd_rt))
-        {
+        TRY_BUF( p_fd_wd_rt, sizeof(struct radix_tree_root) ) {
             INIT_RADIX_TREE(p_fd_wd_rt, GFP_ATOMIC);
 
             spin_lock(&record->lock);
@@ -41,8 +39,9 @@ static int comm_record_insert(struct comm_record_t *record, unsigned long pid, i
                 printh("[comm_record] pid_rt allocation failed for %ld.\n", pid);
                 return ret;
             }
-        }
-        else { return -ENOMEM; }  
+        } ELSE_BUF( p_fd_wd_rt, KEEP_BUF ) {            //NOTE: keep `p_fd_wd_rt`
+            return -ENOMEM;
+        } END_BUF;
     }
 
     // insert the record
@@ -201,26 +200,26 @@ int comm_list_add_by_name(const char *name)
         return 0;
     }
     
-    TRY_BUF( item, sizeof(struct comm_list_item) )
+    TRY_BUF( item, sizeof(struct comm_list_item) ) {
         // allocate memory
-        item->comm_name = kmalloc(strlen(name), GFP_KERNEL);
-        if (likely(item->comm_name))
-        {
+        TRY_BUF( item->comm_name, strlen(name) ) {
             // initialize the item
             strcpy(item->comm_name, name);
             comm_record_init(&item->record);
             INIT_LIST_HEAD(&item->node);
-
+            
             // add onto comm_list
             spin_lock(&comm_list.lock);
             list_add(&item->node, &comm_list.head);
             spin_unlock(&comm_list.lock);
             printh("comm_list add \"%s\"\n", name);
             ret = 0;
-        } else { ret = -ENOMEM; }
-    ELSE_BUF( item, FREE_BUF )
+        } ELSE_BUF( item->comm_name, KEEP_BUF ) {       //NOTE: keep `item->comm_name`
+            ret = -ENOMEM;
+        } END_BUF;
+    } ELSE_BUF( item, KEEP_BUF ) {                      //NOTE: keep `item`
         ret = -ENOMEM;
-    END_BUF
+    } END_BUF;
 
     return ret;
 }
@@ -314,7 +313,6 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
     {
         TRY_BUF( buf1, PATH_MAX ) {
             TRY_BUF( buf2, PATH_MAX ) {
-
                 // get pname from `struct path`
                 proot = dentry_path_raw(current->fs->root.dentry, buf1, PATH_MAX);
                 pname = dentry_path_raw(path.dentry,              buf2, PATH_MAX);
@@ -324,12 +322,11 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
                     snprintf(precord, sizeof(precord), "%s%s", proot, pname);
                     comm_record_insert(&item->record, task_pid_nr(current), fd, wd, precord);
                     // printh("%s, PID %d add (%d,%d): %s\n", current->comm, task_pid_nr(current), fd, wd, precord);
-                ELSE_BUF(precord, KEEP_BUF) //NOTE: not free here
+                ELSE_BUF(precord, KEEP_BUF) {           //NOTE: keep `precord`
                     wd = -ENOMEM;
-                END_BUF
-
-            } ELSE_BUF( buf2, FREE_BUF ); END_BUF
-        } ELSE_BUF( buf1, FREE_BUF ); END_BUF
+                } END_BUF;
+            } ELSE_BUF( buf2, FREE_BUF ); END_BUF;
+        } ELSE_BUF( buf1, FREE_BUF ); END_BUF;
     }
 
     return wd;
