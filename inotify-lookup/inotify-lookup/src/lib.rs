@@ -133,9 +133,10 @@ pub fn dump(name: String) -> Vec<String> {
 #[test]
 fn run_test() -> Result<(), std::io::Error> {
     let app_name = serde_json::to_string("code").unwrap();
+    let args=format!( "{{ \"name\":{} }}", app_name );
 
-    println!("register: {}", register( app_name.clone() ));
-    println!("dump: {:?}", dump( app_name.clone() ));
+    println!("register: {}", register( args.clone() ));
+    println!("dump: {:?}", dump( args.clone() ));
     //println!("unregister: {}", unregister( app_name.clone() ));
 
     Ok(())

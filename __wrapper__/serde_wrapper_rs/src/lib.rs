@@ -10,30 +10,35 @@ pub fn jsonify(_attr: TokenStream, input: TokenStream) -> TokenStream {
     let mut block = func.block.clone();
     let mut sig = func.sig.clone();
 
-    sig.inputs.iter_mut().for_each(|arg|{
+    // build deserialize statements
+    sig.inputs.iter().for_each(|arg|{
         match arg {
             syn::FnArg::Typed(pat) => {
                 let (_pat, _ty) = ( pat.pat.clone(), pat.ty.clone() );
-                // change function input type to "String"
-                pat.ty = syn::parse( quote!(String).into() ).unwrap();
-                // build deserialize statements
+                let _pat_name:String = quote!(#_pat).to_string();
+
                 let _stmt: syn::Stmt = parse_quote!(
-                    let #_pat:#_ty = match serde_json::from_str(&#_pat) {
-                        Ok(res) => res,
-                        Err(_) => return "".into() //panic and exit
+                    let #_pat:#_ty = match serde_json::from_value( kwargs[#_pat_name].clone() ) {
+                        Ok(value) => value,
+                        Err(_) => return "".into()
                     };
-                ); 
+                );
+
                 block.stmts.insert(0, _stmt);
             },
             _ => {}
         }
     });
+
+    //change function input to monolithic String
+    sig.inputs = parse_quote!(kwargs:String);
     // change function output type to "String"
-    sig.output = syn::parse( quote!(->String).into() ).unwrap();
+    sig.output = parse_quote!(->String);
 
     // build wrapped block of statements
     let block: syn::Block = syn::parse(
         quote!({
+            let kwargs:serde_json::Value = serde_json::from_str(&kwargs).unwrap(); //panic
             let res = { #block };
             serde_json::to_string(&res).unwrap_or( "".into() )
         }).into()
@@ -46,5 +51,6 @@ pub fn jsonify(_attr: TokenStream, input: TokenStream) -> TokenStream {
         vis: syn::parse( quote!(pub).into() ).unwrap(),
         sig, block
     };
+    // println!("{}", quote!( #wrapped_func ));
     quote!( #wrapped_func ).into()
 }
