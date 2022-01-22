@@ -132,12 +132,21 @@ pub fn dump(name: String) -> Vec<String> {
 
 #[test]
 fn run_test() -> Result<(), std::io::Error> {
-    let app_name = serde_json::to_string("code").unwrap();
-    let args=format!( "{{ \"name\":{} }}", app_name );
+    use std::ffi::CString;
 
-    println!("register: {}", register( args.clone() ));
-    println!("dump: {:?}", dump( args.clone() ));
-    //println!("unregister: {}", unregister( app_name.clone() ));
+    let kwargs:String = r#"{"name":"code"}"#.into();
+    let kwargs_1 = CString::new(kwargs.clone()).unwrap().into_raw();
+    let kwargs_2 = CString::new(kwargs.clone()).unwrap().into_raw();
+
+    println!("register: {}", unsafe{
+        CString::from_raw( register(kwargs_1) ).into_string().unwrap()
+    });
+    println!("dump: {:?}", unsafe{
+        CString::from_raw( dump(kwargs_2) ).into_string().unwrap()
+    });
+    // println!("unregister: {:?}", unsafe{
+    //     CString::from_raw( unregister(kwargs) ).into_string().unwrap()
+    // });
 
     Ok(())
 }
