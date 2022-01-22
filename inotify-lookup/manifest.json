@@ -24,7 +24,7 @@
         "status":
             "lsmod | grep inotify_hook",
         "enable": [
-            "pkexec insmod kmod/inotify_hook.ko"
+            "pkexec insmod $PWD/kmod/inotify_hook.ko"
         ],
         "disable": [
             "pkexec rmmod inotify_hook"
