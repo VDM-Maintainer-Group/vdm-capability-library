@@ -60,5 +60,15 @@ Please refer to the tutorial [here](CONTRIBUTING.md).
 
 ### About *Simple Build System*
 
-`./build.py -h` for more details.
+- Have `pyvdm` installed, you can use `sbs` to invoke the build system;
+
+- `sbs build` is equal to `sbs build *`, trying to find `manifest.json` in all the sub-folders.
+
+- The suggested usage for single capability testing:
+
+  ```bash
+  mkdir build; cd build;
+  sbs build ..
+  sbs install ..
+  ```
 
