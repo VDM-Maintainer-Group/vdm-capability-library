@@ -1,7 +1,7 @@
 # VDM Capability Development Norm
 > For Virtual Domain Manager <=v1.0.0
 
-1. Fork this report and create your own branch with the capability name to contribute, e.g., `note-file`;
+1. Fork this repo and create your own branch with the capability name to contribute, e.g., `inotify-lookup`;
 
 2. Create the capability folder, and add the `README.md` file filling in the following content:
     ```markdown
