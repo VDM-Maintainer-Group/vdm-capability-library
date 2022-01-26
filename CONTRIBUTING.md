@@ -3,7 +3,7 @@
 
 1. Fork this repo and create your own branch with the capability name to contribute, e.g., `inotify-lookup`;
 
-2. Create the capability folder, and add the `README.md` file filling in the following content:
+2. Create the capability subfolder, and add the `README.md` file with the following content:
     ```markdown
     # <Capability_Name_Here>
     **This capability aims at: <short_description_here>**
@@ -28,7 +28,7 @@
     > Your test procedure or scripts here.
     ```
 
-3. Put your project in the created subfolder, and use wrapper in `__wrapper__` to decorate your entry functions;
+3. Put your project in the created subfolder, and use wrapper (in the `__wrapper__` folder) to decorate your entry functions;
     > Or you can manually decorate your functions: takes *one CString* as input, and *one CString* as return value;
 
 3. Add the `manifest.json` file resembling the following format, and use `sbs` to compile the project;
@@ -58,11 +58,11 @@
     ```
 
 4. Test your capability;
-    - `pyvdm cm enable/disable/status <capability_name>`
-    - access the functions via `pyvdm` local handle:
+    - status control via pyvdm: `pyvdm cm enable/disable/status <capability_name>`
+    - access the functions via pyvdm local handle:
         ```python3
         import json
-        from pyvdm.interface with import CapabilityHandleLocal
+        from pyvdm.interface.CapabilityLibrary import CapabilityHandleLocal
 
         handle = CapabilityHandleLocal('<capability_name>')
         func   = handle.func
