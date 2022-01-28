@@ -21,7 +21,7 @@ mod _priv {
 
     #[allow(dead_code)] //Rust lint open issue, #47133
     const NETLINK_USER: i32 = 31;   // (fixed) netlink specific magic number
-    const MAX_NAME_LEN: usize = 10; // FIXME:1024 (fixed) maximum length of app name
+    const MAX_NAME_LEN: usize = 1024; // (fixed) maximum length of app name
     // const MAX_PATH_LEN: usize = 4096; // (fixed) maximum length of inode pathname
     #[repr(C,packed)]
     struct ReqMessage {
