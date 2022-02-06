@@ -15,7 +15,6 @@ Feel free to *use or contribute* every best practice in this repo.
   
   > find out files one application is watching on, with inotify.
 
-- [ ] 
 
 ### Build
 
