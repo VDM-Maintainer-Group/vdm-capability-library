@@ -42,6 +42,7 @@ int append_message_cb(int pid, char *pathname, void *data)
     msg_buf->seq ++;
     if ( (ret=nlmsg_unicast(nl_sock, msg_buf->skb, msg_buf->usr_pid)) < 0 )
     {
+        //FIXME: failure when message too large
         printh("nl_recv_msg: message response to %d failed.\n", msg_buf->usr_pid);
         goto out;
     }
