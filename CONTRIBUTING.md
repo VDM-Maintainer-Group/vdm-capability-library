@@ -1,7 +1,7 @@
 # VDM Capability Development Norm
 > For Virtual Domain Manager <=v1.0.0
 
-1. Fork this repo and create your own branch with the capability name to contribute, e.g., `inotify-lookup`;
+1. Fork this repo and create your own branch with the capability name to contribute, e.g., `inotify-lookup`.
 
 2. Create the capability subfolder, and add the `README.md` file with the following content:
     ```markdown
@@ -11,27 +11,27 @@
     > Long descriptions in the following graphs.
 
     ### References
-    > (Optional) The reference material link to this capability;
+    > (Optional) The reference material link to this capability.
 
     -----
 
     ### Dependency
-    > The dependency of this capability
+    > The dependency of this capability.
 
     ### Structure
-    > List the major folders/files and explains their functions accordingly;
+    > List the major folders/files and explains their functions accordingly.
 
     ### Build
-    > (Optional) Your manual build procedure or scripts here
+    > (Optional) Your manual build procedure or scripts here.
 
     ### Test
-    > Your test procedure or scripts here.
+    > (Optional) Your test procedure or scripts here.
     ```
 
-3. Put your project in the created subfolder, and use wrapper (in the `__wrapper__` folder) to decorate your entry functions;
-    > Or you can manually decorate your functions: takes *one CString* as input, and *one CString* as return value;
+3. Put your project in the created subfolder, and use wrapper (in the `__wrapper__` folder) to decorate your entry functions.
+    > Or you can manually decorate your functions: take *one json-format CString* as input argument, and *one json-format CString* as return value;
 
-3. Add the `manifest.json` file resembling the following format, and use `sbs` to compile the project;
+3. Add the `manifest.json` file resembling the following format, and use `sbs build .` to compile the project.
     ```json
     {
         "name": "",             // (required) capability name, '-'/'_' both allowed
@@ -57,8 +57,9 @@
     }
     ```
 
-4. Test your capability;
-    - status control via pyvdm: `pyvdm cm enable/disable/status <capability_name>`
+4. Test your capability:
+    - install your capability with sbs: `sbs install .`
+    - status control via pyvdm: `pyvdm cm <enable/disable/status> <capability_name>`
     - access the functions via pyvdm local handle:
         ```python3
         import json
@@ -70,4 +71,4 @@
         json.loads( func(args) )
         ```
 
-5. Create the Pull Request on Github for code review.
+5. Create the Pull Request on this Github repo for code review.

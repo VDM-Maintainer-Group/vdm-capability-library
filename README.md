@@ -3,15 +3,23 @@
 This repo is maintained as a fully-decoupled submodule of [Project VDM](https://github.com/VDM-Maintainer-Group/virtual-domain-manager). 
 Feel free to *use or contribute* every best practice in this repo.
 
+**About *Simple Build System***
+
+- Have `pyvdm` installed, you can use `sbs` to invoke the build system as alias to `./build.py`;
+
+- Bare `sbs build` is equal to `sbs build *` instead of `sbs build .`, applying to all the sub-folders with `manifest.json`;
+
+- It is suggested to use a temporary folder for single capability building, e.g., `mkdir build && cd build && sbs build ..`
+
 -----
 
 ### Dependency
 
-**Python 3**: `halo`, `pyyaml`
+**Python 3**: `pip3 install halo pyyaml`
 
 ### Structure
 
-- [x] [inotify-lookup](./inotify-lookup)
+- [inotify-lookup](./inotify-lookup)
   
   > find out files one application is watching on, with inotify.
 
@@ -40,16 +48,3 @@ Feel free to *use or contribute* every best practice in this repo.
 
 Please refer to the tutorial [here](CONTRIBUTING.md).
 
-### About *Simple Build System*
-
-- Have `pyvdm` installed, you can use `sbs` to invoke the build system;
-
-- `sbs build` is equal to `sbs build *`, trying to find `manifest.json` in all the sub-folders.
-
-- The suggested usage for single capability testing:
-  
-  ```bash
-  mkdir build; cd build;
-  sbs build ..
-  sbs install ..
-  ```
