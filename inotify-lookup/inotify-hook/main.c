@@ -321,7 +321,7 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
                 // insert into comm_record
                 TRY_BUF(precord, PATH_MAX)
                     buf_len = strlen(proot) + strlen(pname) + 2; //plus '/' and '\0'.
-                    snprintf(precord, buf_len, "%s/%s", proot, pname);
+                    snprintf(precord, buf_len, "%s%s", proot, pname);
                     comm_record_insert(&item->record, task_pid_nr(current), fd, wd, precord);
                     // printh("%s, PID %d add (%d,%d): %s\n", current->comm, task_pid_nr(current), fd, wd, precord);
                 ELSE_BUF(precord, KEEP_BUF) {           //NOTE: keep `precord`
