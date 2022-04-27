@@ -26,17 +26,9 @@ Feel free to *use or contribute* every best practice in this repo.
 
 ### Build
 
-- With *Simple Build System*:
-  
-  ```bash
-  ./build.py build
-  ```
-
-- Manually build:
-  
-  ```bash
-  mkdir build; cd build; cmake ..; make
-  ```
+```bash
+./build.py build
+```
 
 ### Test
 
