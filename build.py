@@ -254,6 +254,27 @@ class SimpleBuildSystem:
             raise Exception(msg)
         pass
 
+    def clean(self, logger=NoneLogger):
+        self._title = '[clean] %s'
+        try:
+            _manifest = self.load_manifest()
+            self._title = '[%s] %s'%(self.name, '%s')
+            #
+            self._remove_files(OUTPUT_DIRECTORY)
+            #
+            if 'clean' in _manifest:
+                _path_root = POSIX( Path('.').resolve() )
+                _path_filter = lambda x: os.path.commonprefix([x, _path_root]) == _path_root
+                #
+                path_temp = [ POSIX(Path(x).resolve()) for x in _manifest['clean'] ]
+                path_temp = filter(_path_filter, path_temp)
+                SHELL_RUN( 'rm -rf %s'%(' '.join(path_temp)) )
+            #
+            logger.text = self._title%'Cleanup.'
+        except Exception as e:
+            raise e
+        pass
+
     def install(self, logger=NoneLogger):
         self._title = '[install] %s'
         try:
@@ -262,7 +283,7 @@ class SimpleBuildSystem:
             # check build outputs
             logger.text = self._title%'Check building results ...'
             try:
-                self._copy_files(Path('.'), self.output_dir)
+                self._copy_files(Path('output'), self.output_dir)
             except:
                 if logger.enabled:
                     self.build(logger)
@@ -385,6 +406,8 @@ def execute(sbs:SimpleBuildSystem, command:str, work_dirs, logo_show_flag, enabl
         return apply(sbs.uninstall, work_dirs, enable_halo)
     elif command=='test':
         return apply(sbs.test, work_dirs, enable_halo)
+    elif command=='clean':
+        return apply(sbs.clean, work_dirs, enable_halo)
     elif command=='build' or command==None:
         if command==None and logo_show_flag:
             display_logo()
@@ -400,6 +423,9 @@ def sbs_entry(command, work_dirs, logo_show_flag=False, enable_halo=False):
 
 def init_subparsers(subparsers):
     p_build = subparsers.add_parser('build')
+    p_build.add_argument('names', metavar='name', nargs='*')
+    #
+    p_build = subparsers.add_parser('clean')
     p_build.add_argument('names', metavar='name', nargs='*')
     #
     p_install = subparsers.add_parser('install')

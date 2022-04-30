@@ -19,6 +19,10 @@
         ]
     },
 
+    "clean": [
+        "target/release", "build", "target/wheels"
+    ],
+
     "runtime": {
         "dependency": {},
         "status":
