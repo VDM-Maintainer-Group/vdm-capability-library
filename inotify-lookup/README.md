@@ -35,16 +35,16 @@ Here lists some applications using `inotify`:
 - With *Simple Build System*:
 
   ```bash
-  ./build.py build inotify-lookup
+  mkdir build; cd build; sbs build ..
   ```
 
 - Manually build:
 
   ```bash
-  # for netlink client
+  # build netlink client
   cargo build --release
   
-  # for kernel hook module build
+  # build kernel hook module
   mkdir -p build; cd build; cmake ..; make
   ```
 
