@@ -260,7 +260,13 @@ class SimpleBuildSystem:
             _manifest = self.load_manifest()
             self._title = '[%s] %s'%(self.name, '%s')
             #
-            self._remove_files(OUTPUT_DIRECTORY)
+            _output = [x[1] if x[1] else x[0] for x in self.output]
+            _output.append( POSIX(Path(self.name)/'.conf') )
+            _output = [(x,None) for x in _output]
+            self.output = _output
+            self._remove_files(self.output_dir)
+            # cleanup empty folders
+            SHELL_RUN(f'find {self.output_dir} -type d -empty -delete')
             #
             if 'clean' in _manifest:
                 _path_root = POSIX( Path('.').resolve() )
