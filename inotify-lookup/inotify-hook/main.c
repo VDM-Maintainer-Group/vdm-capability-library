@@ -16,6 +16,8 @@ static struct comm_list_t comm_list;
 static struct comm_list_item * comm_list_find(const char *);
 static int __init inotify_hook_init(void);
 static void __exit inotify_hook_fini(void);
+typedef char *(* d_absolute_path_fn)(const struct path *path, char *buf, int buflen);
+static d_absolute_path_fn e_absolute_path = NULL;
 
 /********************* COMM_RECORD UTILITY FUNCTION **********************/
 static int comm_record_insert(struct comm_record_t *record, unsigned long pid, int fd, u32 wd, char * const pname)
@@ -285,14 +287,14 @@ static void comm_list_exit(void)
 KHOOK_EXT(long, ORIGIN(inotify_add_watch), const struct pt_regs *);
 static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
 {
-    int wd;
+    int fd, wd;
+    u32 mask;
     unsigned int flags = 0;
     //
     struct path path;
-    char *buf1, *buf2;
-    char *proot=NULL, *pname=NULL;
+    char *buf;
+    const char __user *pathname;
     //
-    int buf_len = 0;
     char *precord=NULL;
     struct comm_list_item *item;
 
@@ -300,9 +302,9 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
     wd = KHOOK_ORIGIN(ORIGIN(inotify_add_watch), regs);
 
     /* decode the registers */
-    int fd = (int) regs->di;
-    const char __user *pathname = (char __user *) regs->si;
-    u32 mask = (u32) regs->dx;
+    fd = (int) regs->di;
+    pathname = (char __user *) regs->si;
+    mask = (u32) regs->dx;
 
     /* get and insert the pathname record */
     if (!(mask & IN_DONT_FOLLOW))
@@ -312,23 +314,16 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
     
     if ( wd>=0 && (item=comm_list_find(current->comm)) && (user_path_at(AT_FDCWD, pathname, flags, &path)==0) )
     {
-        TRY_BUF( buf1, PATH_MAX ) {
-            TRY_BUF( buf2, PATH_MAX ) {
-                // get pname from `struct path`
-                proot = dentry_path_raw(current->fs->root.dentry, buf1, PATH_MAX);
-                pname = dentry_path_raw(path.dentry,              buf2, PATH_MAX);
-                path_put(&path);
-                // insert into comm_record
-                TRY_BUF(precord, PATH_MAX)
-                    buf_len = strlen(proot) + strlen(pname) + 2; //plus '/' and '\0'.
-                    snprintf(precord, buf_len, "%s%s", proot, pname);
-                    comm_record_insert(&item->record, task_pid_nr(current), fd, wd, precord);
-                    // printh("%s, PID %d add (%d,%d): %s\n", current->comm, task_pid_nr(current), fd, wd, precord);
-                ELSE_BUF(precord, KEEP_BUF) {           //NOTE: keep `precord`
-                    wd = -ENOMEM;
-                } END_BUF;
-            } ELSE_BUF( buf2, FREE_BUF ); END_BUF;
-        } ELSE_BUF( buf1, FREE_BUF ); END_BUF;
+        TRY_BUF( buf, PATH_MAX ) {
+            // get precord from `struct path`
+            precord = e_absolute_path(&path, buf, PATH_MAX);
+            path_put(&path);
+            // insert into comm_record
+            comm_record_insert(&item->record, task_pid_nr(current), fd, wd, precord);
+            // printh("%s, PID %d add (%d,%d): %s\n", current->comm, task_pid_nr(current), fd, wd, precord);
+        } ELSE_BUF( buf, KEEP_BUF ) {           //NOTE: keep `precord`
+            wd = -ENOMEM;
+        } END_BUF;
     }
 
     return wd;
@@ -373,6 +368,14 @@ static int __init inotify_hook_init(void)
     {
         printh("khook Initialization Failed.\n");
         return ret;
+    }
+    /* export private symbol */
+    // static char *d_absolute_path(const struct path *path, char *buf, int buflen);
+    e_absolute_path = (void *)khook_lookup_name("d_absolute_path");
+    if (!e_absolute_path)
+    {
+        printh("d_absolute_path not found.\n");
+        return -EINVAL;
     }
     /* init netlink */
     if ( (ret = netlink_comm_init()) < 0 )
