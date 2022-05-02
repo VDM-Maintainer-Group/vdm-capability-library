@@ -314,6 +314,7 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
     
     if ( wd>=0 && (item=comm_list_find(current->comm)) && (user_path_at(AT_FDCWD, pathname, flags, &path)==0) )
     {
+        //FIXME: buffer allocation problem
         TRY_BUF( buf, PATH_MAX ) {
             // get precord from `struct path`
             precord = e_absolute_path(&path, buf, PATH_MAX);
@@ -370,7 +371,6 @@ static int __init inotify_hook_init(void)
         return ret;
     }
     /* export private symbol */
-    // static char *d_absolute_path(const struct path *path, char *buf, int buflen);
     e_absolute_path = (void *)khook_lookup_name("d_absolute_path");
     if (!e_absolute_path)
     {
