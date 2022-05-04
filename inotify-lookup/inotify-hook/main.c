@@ -295,7 +295,7 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
     char *buf;
     const char __user *pathname;
     //
-    char *precord=NULL;
+    char *ptemp=NULL, *precord=NULL;
     struct comm_list_item *item;
 
     /* call the original function */
@@ -314,14 +314,18 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
     
     if ( wd>=0 && (item=comm_list_find(current->comm)) && (user_path_at(AT_FDCWD, pathname, flags, &path)==0) )
     {
-        //FIXME: buffer allocation problem
         TRY_BUF( buf, PATH_MAX ) {
             // get precord from `struct path`
-            precord = e_absolute_path(&path, buf, PATH_MAX);
+            ptemp = e_absolute_path(&path, buf, PATH_MAX);
             path_put(&path);
             // insert into comm_record
-            comm_record_insert(&item->record, task_pid_nr(current), fd, wd, precord);
-            // printh("%s, PID %d add (%d,%d): %s\n", current->comm, task_pid_nr(current), fd, wd, precord);
+            TRY_BUF( precord, PATH_MAX ) {
+                strcpy( precord, ptemp );
+                comm_record_insert(&item->record, task_pid_nr(current), fd, wd, precord);
+                // printh("%s, PID %d add (%d,%d): %s\n", current->comm, task_pid_nr(current), fd, wd, precord);
+            } ELSE_BUF( precord, KEEP_BUF ) {           //NOTE: keep `precord`
+                wd = -ENOMEM;
+            } END_BUF;
         } ELSE_BUF( buf, KEEP_BUF ) {           //NOTE: keep `precord`
             wd = -ENOMEM;
         } END_BUF;
