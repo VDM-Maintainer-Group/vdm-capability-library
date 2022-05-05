@@ -326,9 +326,7 @@ static long MODIFY(inotify_add_watch)(const struct pt_regs *regs)
             } ELSE_BUF( precord, KEEP_BUF ) {           //NOTE: keep `precord`
                 wd = -ENOMEM;
             } END_BUF;
-        } ELSE_BUF( buf, KEEP_BUF ) {           //NOTE: keep `precord`
-            wd = -ENOMEM;
-        } END_BUF;
+        } ELSE_BUF( buf, FREE_BUF ); END_BUF;
     }
 
     return wd;
