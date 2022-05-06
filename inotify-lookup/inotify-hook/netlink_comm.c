@@ -18,7 +18,7 @@ int append_message_cb(int pid, char *pathname, void *data)
     //init skb
     msg_buf->skb = nlmsg_new(NLMSG_DEFAULT_SIZE, 0);
     if (unlikely(!msg_buf->skb)) {
-        printh("nl_recv_msg: skb allocation failed.\n");
+        printh("append_message_cb: skb allocation failed.\n");
         goto out;
     }
     NETLINK_CB(msg_buf->skb).dst_group = 0; /* not in mcast group */
@@ -43,7 +43,7 @@ int append_message_cb(int pid, char *pathname, void *data)
     if ( (ret=nlmsg_unicast(nl_sock, msg_buf->skb, msg_buf->usr_pid)) < 0 )
     {
         //FIXME: failure when message too large
-        printh("nl_recv_msg: message response to %d failed.\n", msg_buf->usr_pid);
+        printh("append_message_cb: message response to %d failed: %d.\n", msg_buf->usr_pid, ret);
         goto out;
     }
 out:
@@ -52,6 +52,7 @@ out:
 
 static void nl_recv_msg(struct sk_buff *skb)
 {
+    int ret = 0;
     struct nlmsghdr *nlh;
     struct req_msg_t *req_msg;  //req msg
     struct msg_buf_t msg_buf;   //res msg
@@ -89,9 +90,10 @@ static void nl_recv_msg(struct sk_buff *skb)
             strncpy(nlmsg_data(nlh), "done", strlen("done"));
             nlmsg_end(msg_buf.skb, nlh);
             // unicast the response
-            if ( nlmsg_unicast(nl_sock, msg_buf.skb, msg_buf.usr_pid) < 0 )
+            if ( (ret=nlmsg_unicast(nl_sock, msg_buf.skb, msg_buf.usr_pid)) < 0 )
             {
-                printh("nl_recv_msg: message response to %d failed.\n", msg_buf.usr_pid);
+                //FIXME: failure when message too large
+                printh("nl_recv_msg: message response to %d failed: %d.\n", msg_buf.usr_pid, ret);
             }
             break;
         default:
