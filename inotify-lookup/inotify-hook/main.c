@@ -114,7 +114,7 @@ static int comm_record_dump(struct comm_record_t *record, int(*fn)(int pid, char
                 char *precord = radix_tree_deref_slot(slot1);
                 if ( (ret = fn(iter0.index, precord, data)) < 0 )
                 {
-                    // printh("%ld, %s\n", iter0.index, (char *)precord);
+                    printh("%ld, %s\n", iter0.index, (char *)precord);
                     goto out;
                 }
             }

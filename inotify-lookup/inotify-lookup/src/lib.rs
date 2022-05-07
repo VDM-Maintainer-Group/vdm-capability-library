@@ -38,7 +38,8 @@ mod _priv {
 
     pub fn get_socket() -> Result<NlSocketHandle, NlError> {
         let socket = NlSocketHandle::connect(
-            NlFamily::UnrecognizedVariant(NETLINK_USER), Some(getpid()), &[])?;
+            NlFamily::UnrecognizedVariant(NETLINK_USER), Some(getpid()), &[]
+        )?;
         Ok(socket)
     }
 
