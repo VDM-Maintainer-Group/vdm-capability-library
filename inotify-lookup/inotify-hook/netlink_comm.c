@@ -42,7 +42,6 @@ int append_message_cb(int pid, char *pathname, void *data)
     msg_buf->seq ++;
     if ( (ret=nlmsg_unicast(nl_sock, msg_buf->skb, msg_buf->usr_pid)) < 0 )
     {
-        //FIXME: failure when message too large
         printh("append_message_cb: message response to %d failed: %d.\n", msg_buf->usr_pid, ret);
         goto out;
     }
@@ -92,7 +91,6 @@ static void nl_recv_msg(struct sk_buff *skb)
             // unicast the response
             if ( (ret=nlmsg_unicast(nl_sock, msg_buf.skb, msg_buf.usr_pid)) < 0 )
             {
-                //FIXME: failure when message too large
                 printh("nl_recv_msg: message response to %d failed: %d.\n", msg_buf.usr_pid, ret);
             }
             break;
