@@ -99,6 +99,7 @@ out:
 static int comm_record_dump(struct comm_record_t *record, int(*fn)(int pid, char *precord, void *data), void *data)
 {
     int ret = 0;
+    int counter = 0;
     struct radix_tree_iter iter0, iter1;
     void **slot0, **slot1;
 
@@ -114,8 +115,12 @@ static int comm_record_dump(struct comm_record_t *record, int(*fn)(int pid, char
                 char *precord = radix_tree_deref_slot(slot1);
                 if ( (ret = fn(iter0.index, precord, data)) < 0 )
                 {
-                    printh("%ld, %s\n", iter0.index, (char *)precord);
+                    printh("%d, %s\n", counter, (char *)precord);
                     goto out;
+                }
+                else
+                {
+                    counter += 1;
                 }
             }
         } //else remove from pid_rt
