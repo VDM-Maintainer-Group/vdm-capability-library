@@ -42,8 +42,12 @@ int append_message_cb(int pid, char *pathname, void *data)
     msg_buf->seq ++;
     if ( (ret=nlmsg_unicast(nl_sock, msg_buf->skb, msg_buf->usr_pid)) < 0 )
     {
+        // printh("rmem_alloc: %d, rcvbuf: %d\n", atomic_read(&sk->sk_rmem_alloc), sk->sk_rcvbuf);
         printh("append_message_cb: message response to %d failed: %d.\n", msg_buf->usr_pid, ret);
         goto out;
+    }
+    else {
+        sock_rfree( msg_buf->skb ); //FIXME: dirty hack
     }
 out:
     return ret;
