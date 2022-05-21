@@ -31,7 +31,7 @@ impl XWrap {
 
         for screen_num in 0..screen_count {
             let screen = unsafe{
-                *(self.xlib.XScreenOfDisplay)( self,display, screen_num )
+                *(self.xlib.XScreenOfDisplay)( self.display, screen_num )
             };
             screens.push(screen);
         }
