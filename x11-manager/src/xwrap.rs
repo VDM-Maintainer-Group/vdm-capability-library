@@ -1,4 +1,4 @@
-use std::os::raw::{c_long, };
+use std::os::raw::{c_long, c_ulong, };
 use std::{ptr, };
 use x11_dl::xlib;
 use crate::xatom::XAtom;
@@ -65,10 +65,34 @@ impl XWrap {
             (self.xlib.XSync)(self.display, xlib::False);
         }
     }
+
+    fn set_desktop_prop(&self, atom: c_ulong, data: &[u32]) {
+        let mut msg: xlib::XClientMessageEvent = unsafe { std::mem::zeroed() };
+
+        msg.type_ = xlib::ClientMessage;
+        msg.format = 32;
+        msg.send_event = 1;
+        // msg.display = self.display;
+        msg.window  = self.root;
+        msg.message_type = atom;
+
+        for (i,x) in data.iter().enumerate() {
+            msg.data.set_long(i, *x as c_long);
+        }
+
+        let mut ev: xlib::XEvent = msg.into();
+        self.send_event( &mut ev, None, None );
+    }
+    
 }
 
-#[test]
-pub fn test() {
-    let xw = XWrap::new();
+// EWMH spec, https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html
+impl XWrap {
+    pub fn set_number_of_desktops(&self, num: u32) {
+        self.set_desktop_prop(self.atoms.NetNumberOfDesktops, &[num])
+    }
 
+    pub fn set_current_desktop(&self, idx: u32) {
+        self.set_desktop_prop(self.atoms.NetCurrentDesktop, &[idx, xlib::CurrentTime as u32])
+    }
 }

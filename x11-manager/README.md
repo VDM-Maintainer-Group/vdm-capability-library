@@ -11,14 +11,14 @@
 -----
 
 ### Dependency
-- `libxcb-ewmh-dev`, `libxcb-icccm4-dev`
+- `libxcb-util-dev`
 
 ### Structure
 > TBD.
 
 ### TODO
-- [ ] set number of desktops
-- [ ] set current focused desktop
+- [x] set number of desktops
+- [x] set current focused desktop
 
 - [ ] get window props by "substring matching":
     - if multiple windows match, return all as a list;
