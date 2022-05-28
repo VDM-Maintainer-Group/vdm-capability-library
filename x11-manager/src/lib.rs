@@ -1,5 +1,6 @@
 mod xatom;
 mod xwrap;
+mod xmodel;
 
 use xwrap::XWrap;
 // #[no_mangle]#[jsonify]

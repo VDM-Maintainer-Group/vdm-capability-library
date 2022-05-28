@@ -1,11 +1,14 @@
-use std::os::raw::{c_long, c_ulong, };
+use std::os::raw::{c_int, c_uint, c_long, c_ulong, };
 use std::{ptr, };
+use std::ffi::CStr;
 use x11_dl::xlib;
 use crate::xatom::XAtom;
+use crate::xmodel::{ScreenStatus, };
 
 pub struct XWrap {
     xlib: xlib::Xlib,
     display: *mut xlib::Display,
+    screens: Vec<ScreenStatus>,
     root: xlib::Window,
     atoms: XAtom
 }
@@ -24,29 +27,24 @@ impl XWrap {
             (xlib.XDefaultRootWindow)(display)
         };
 
-        Self{ xlib, display, root, atoms }
-    }
-
-    fn get_xscreens(&self) -> Vec<xlib::Screen> {
         let mut screens = Vec::new();
         let screen_count = unsafe{
-            (self.xlib.XScreenCount)( self.display )
+            (xlib.XScreenCount)( display )
         };
-
         for screen_num in 0..screen_count {
-            let screen = unsafe{
-                *(self.xlib.XScreenOfDisplay)( self.display, screen_num )
+            let (name, screen, root, h, w) = unsafe{
+                // let _name = (xlib.XDisplayString)()
+                let mut _screen = *(xlib.XScreenOfDisplay)( display, screen_num );
+                let _root   = (xlib.XRootWindowOfScreen)( &mut _screen );
+                let _height = (xlib.XHeightOfScreen)( &mut _screen );
+                let _width  = (xlib.XWidthOfScreen)( &mut _screen );
+                let _name = format!("{}x{}-{}", _width, _height, screen_num);
+                (_name, _screen, _root, _height, _width)
             };
-            screens.push(screen);
+            screens.push( ScreenStatus::new(name, screen, root, h, w) );
         }
 
-        return screens;
-    }
-
-    fn get_roots(&self) -> Vec<xlib::Window> {
-        self.get_xscreens().into_iter().map(|mut s| unsafe{
-            (self.xlib.XRootWindowOfScreen)( &mut s )
-        }).collect()
+        Self{ xlib, display, screens, root, atoms }
     }
     
     fn send_event(&self, event: &mut xlib::XEvent, window:Option<xlib::Window>, mask: Option<c_long>) {
@@ -94,5 +92,11 @@ impl XWrap {
 
     pub fn set_current_desktop(&self, idx: u32) {
         self.set_desktop_prop(self.atoms.NetCurrentDesktop, &[idx, xlib::CurrentTime as u32])
+    }
+}
+
+impl XWrap {
+    pub fn get_window_geometry(&self, window: xlib::Window) {
+
     }
 }
