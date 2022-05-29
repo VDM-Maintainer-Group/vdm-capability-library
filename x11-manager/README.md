@@ -17,14 +17,14 @@
 > TBD.
 
 ### TODO
-- [x] set number of desktops
-- [x] set current focused desktop
+- [x] get/set number of desktops
+- [x] get/set current focused desktop
 
 - [ ] get window props by "substring matching":
     - if multiple windows match, return all as a list;
     - return `geometry`, `window state` and `desktop index`, e.g., `wmctrl -lG`;
     - together return with current desktop geometry;
       (if screens disconnected, shrink to the left-bottom corner)
-- [ ] get window info by "window id"
+- [ ] get window info by "window id" or "_NET_WM_PID"
 - [ ] set window props by "substring matching"
-- [ ] set window props by "window id"
+- [ ] set window props by "window id" or "_NET_WM_PID"

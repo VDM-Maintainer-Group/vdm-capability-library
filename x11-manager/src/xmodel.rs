@@ -4,6 +4,21 @@ use std::ops::Sub;
 
 use x11_dl::xlib;
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum WindowState {
+    Modal,
+    Sticky,
+    MaximizedVert,
+    MaximizedHorz,
+    Shaded,
+    SkipTaskbar,
+    SkipPager,
+    Hidden,
+    Fullscreen,
+    Above,
+    Below,
+}
+
 #[derive(Default, Clone, Debug, PartialEq, Copy)]
 pub struct Xyhw {
     pub x: i32,
@@ -80,8 +95,13 @@ impl ScreenStatus {
     }
 }
 
-#[derive(Default, Clone, Debug, Copy)]
+#[derive(Clone, Debug)]
 pub struct WindowStatus {
+    name: String,
+    pid: u32,
+    screen: String,
+    desktop: u32,
+    state: WindowState,
     xyhw: Xyhw
 }
 

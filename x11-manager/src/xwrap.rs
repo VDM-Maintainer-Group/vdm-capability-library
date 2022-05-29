@@ -1,9 +1,11 @@
-use std::os::raw::{c_int, c_uint, c_long, c_ulong, };
-use std::{ptr, };
-use std::ffi::CStr;
+use std::os::raw::{c_long, c_ulong, c_int, c_uint, c_char, c_uchar, };
+use std::{ptr, slice};
+use std::ffi::{CString, };
 use x11_dl::xlib;
 use crate::xatom::XAtom;
-use crate::xmodel::{ScreenStatus, };
+use crate::xmodel::{Xyhw, WindowState, ScreenStatus, };
+
+const MAX_PROPERTY_VALUE_LEN: c_long = 4096;
 
 pub struct XWrap {
     xlib: xlib::Xlib,
@@ -64,14 +66,60 @@ impl XWrap {
         }
     }
 
-    fn set_desktop_prop(&self, atom: c_ulong, data: &[u32]) {
+    pub fn flush(&self) {
+        unsafe { (self.xlib.XFlush)(self.display) };
+    }
+
+    fn get_property(&self, window: xlib::Window, property: xlib::Atom, r#type: xlib::Atom) -> Option<(c_ulong, *const c_uchar)> {
+        let mut format_return: i32 = 0;
+        let mut nitems_return: c_ulong = 0;
+        let mut type_return: xlib::Atom = 0;
+        let mut bytes_after_return: xlib::Atom = 0;
+        let mut prop_return: *mut c_uchar = unsafe { std::mem::zeroed() };
+        unsafe {
+            let status = (self.xlib.XGetWindowProperty)(
+                self.display, window, property, 0, MAX_PROPERTY_VALUE_LEN / 4, xlib::False, r#type,
+                &mut type_return, &mut format_return, &mut nitems_return, &mut bytes_after_return, &mut prop_return
+            );
+            if status==i32::from(xlib::Success) && !prop_return.is_null() {
+                return Some( (nitems_return, prop_return) );
+            }
+        }
+        None
+    }
+
+    fn get_text_prop(&self, window: xlib::Window, atom: xlib::Atom) -> Option<String> {
+        unsafe {
+            let mut text_prop: xlib::XTextProperty = std::mem::zeroed();
+            let status: c_int =
+                (self.xlib.XGetTextProperty)(self.display, window, &mut text_prop, atom);
+            if status == 0 {
+                return None;
+            }
+            if let Ok(s) = CString::from_raw(text_prop.value.cast::<c_char>()).into_string() {
+                return Some(s);
+            }
+        };
+        None
+    }
+
+    fn get_window_prop(&self, window: xlib::Window, property: xlib::Atom) -> Option<u32> {
+        let (_, prop_return) = self.get_property(window, property, xlib::XA_CARDINAL)?;
+        unsafe {
+            #[allow(clippy::cast_lossless, clippy::cast_ptr_alignment)]
+            let prop = *prop_return.cast::<u32>();
+            Some(prop)
+        }
+    }
+
+    fn set_window_prop(&self,  window: xlib::Window, atom: c_ulong, data: &[u32]) {
         let mut msg: xlib::XClientMessageEvent = unsafe { std::mem::zeroed() };
 
         msg.type_ = xlib::ClientMessage;
         msg.format = 32;
         msg.send_event = 1;
         // msg.display = self.display;
-        msg.window  = self.root;
+        msg.window  = window;
         msg.message_type = atom;
 
         for (i,x) in data.iter().enumerate() {
@@ -81,22 +129,107 @@ impl XWrap {
         let mut ev: xlib::XEvent = msg.into();
         self.send_event( &mut ev, None, None );
     }
-    
 }
 
 // EWMH spec, https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html
 impl XWrap {
+    pub fn get_number_of_desktops(&self) -> Option<u32> {
+        self.get_window_prop(self.root, self.atoms.NetNumberOfDesktops)
+    }
+
     pub fn set_number_of_desktops(&self, num: u32) {
-        self.set_desktop_prop(self.atoms.NetNumberOfDesktops, &[num])
+        self.set_window_prop(self.root, self.atoms.NetNumberOfDesktops, &[num])
+    }
+
+    pub fn get_current_desktop(&self) -> Option<u32> {
+        self.get_window_prop(self.root, self.atoms.NetCurrentDesktop)
     }
 
     pub fn set_current_desktop(&self, idx: u32) {
-        self.set_desktop_prop(self.atoms.NetCurrentDesktop, &[idx, xlib::CurrentTime as u32])
+        self.set_window_prop(self.root, self.atoms.NetCurrentDesktop, &[idx, xlib::CurrentTime as u32]);
+    }
+
+    pub fn get_window_desktop(&self, window: xlib::Window) -> Option<u32> {
+        self.get_window_prop(window, self.atoms.NetWMDesktop)
+    }
+
+    pub fn set_window_desktop(&self, window: xlib::Window, idx: u32) {
+        self.set_window_prop(window, self.atoms.NetWMDesktop, &[idx, 1]);
+    }
+
+    pub fn get_window_name(&self, window: xlib::Window) -> Option<String> {
+        if let Some(text) = self.get_text_prop(window, self.atoms.NetWMName) {
+            return Some(text);
+        }
+        if let Some(text) = self.get_text_prop(window, xlib::XA_WM_NAME) {
+            return Some(text);
+        }
+        None
+    }
+
+    pub fn get_window_pid(&self, window: xlib::Window) -> Option<u32> {
+        self.get_window_prop(window, self.atoms.NetWMPid)
+    }
+
+    pub fn get_window_states_atoms(&self, window: xlib::Window) -> Vec<xlib::Atom> {
+        if let Some( (nitems_return, prop_return) ) = self.get_property(window, self.atoms.NetWMState, xlib::XA_ATOM) {
+            unsafe {
+                #[allow(clippy::cast_lossless, clippy::cast_ptr_alignment)]
+                let ptr = prop_return as *const c_ulong;
+                let results: &[xlib::Atom] = slice::from_raw_parts(ptr, nitems_return as usize);
+                results.to_vec()
+            }
+        }
+        else {
+            vec![]
+        }
+    }
+
+    pub fn get_window_states(&self, window: xlib::Window) -> Vec<WindowState> {
+        self.get_window_states_atoms(window).iter().map(|a| match a {
+                x if x == &self.atoms.NetWMStateModal => WindowState::Modal,
+                x if x == &self.atoms.NetWMStateSticky => WindowState::Sticky,
+                x if x == &self.atoms.NetWMStateMaximizedVert => WindowState::MaximizedVert,
+                x if x == &self.atoms.NetWMStateMaximizedHorz => WindowState::MaximizedHorz,
+                x if x == &self.atoms.NetWMStateShaded => WindowState::Shaded,
+                x if x == &self.atoms.NetWMStateSkipTaskbar => WindowState::SkipTaskbar,
+                x if x == &self.atoms.NetWMStateSkipPager => WindowState::SkipPager,
+                x if x == &self.atoms.NetWMStateHidden => WindowState::Hidden,
+                x if x == &self.atoms.NetWMStateFullscreen => WindowState::Fullscreen,
+                x if x == &self.atoms.NetWMStateAbove => WindowState::Above,
+                x if x == &self.atoms.NetWMStateBelow => WindowState::Below,
+                _ => WindowState::Modal,
+            })
+            .collect()
     }
 }
 
 impl XWrap {
-    pub fn get_window_geometry(&self, window: xlib::Window) {
+    pub fn get_window_geometry(&self, window: xlib::Window) -> Option<Xyhw> {
+        let mut root_return: xlib::Window = 0;
+        let mut x_return: c_int = 0;
+        let mut y_return: c_int = 0;
+        let mut width_return: c_uint = 0;
+        let mut height_return: c_uint = 0;
+        let mut border_width_return: c_uint = 0;
+        let mut depth_return: c_uint = 0;
 
+        unsafe {
+            let status = (self.xlib.XGetGeometry)(
+                self.display, window,
+                &mut root_return, &mut x_return, &mut y_return, &mut width_return, &mut height_return,
+                &mut border_width_return, &mut depth_return
+            );
+
+            if status == 0 {
+                return None
+            }
+        }
+        Some(Xyhw {
+            x: x_return,
+            y: y_return,
+            w: width_return as i32,
+            h: height_return as i32,
+        })
     }
 }
