@@ -32,12 +32,19 @@ pub fn set_current_desktop(idx: u32) {
 
 // #[no_mangle]#[jsonify]
 pub fn get_window_by_name(name: String) -> Vec<WindowStatus> {
-    unimplemented!()
+    XWrap::new().get_windows_by_filter(|w_name, _, _| {
+        w_name.contains(&name)
+    })
 }
 
 // #[no_mangle]#[jsonify]
 pub fn get_window_by_pid(pid: u32) -> Vec<WindowStatus> {
-    unimplemented!()
+    XWrap::new().get_windows_by_filter( |_, w_pid, _| w_pid==pid )
+}
+
+// #[no_mangle]#[jsonify]
+pub fn get_window_by_wid(wid: u64) -> Vec<WindowStatus> {
+    XWrap::new().get_windows_by_filter( |_, _, w_wid| w_wid==wid )
 }
 
 #[test]

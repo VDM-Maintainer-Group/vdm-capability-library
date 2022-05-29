@@ -67,6 +67,7 @@ pub struct XAtom {
 }
 
 impl XAtom {
+    #[allow(dead_code)]
     pub fn net_supported(&self) -> Vec<xlib::Atom> {
         vec![
             self.NetActiveWindow,
@@ -117,6 +118,7 @@ impl XAtom {
         ]
     }
 
+    #[allow(dead_code)]
     pub const fn get_name(&self, atom: xlib::Atom) -> &str {
         match atom {
             a if a == self.WMProtocols => "WM_PROTOCOLS",

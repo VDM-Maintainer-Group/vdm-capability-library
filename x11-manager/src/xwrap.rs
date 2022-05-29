@@ -3,7 +3,7 @@ use std::{ptr, slice};
 use std::ffi::{CString, };
 use x11_dl::xlib;
 use crate::xatom::XAtom;
-use crate::xmodel::{Xyhw, WindowState, ScreenStatus, };
+use crate::xmodel::{Xyhw, WindowState, ScreenStatus, WindowStatus};
 
 const MAX_PROPERTY_VALUE_LEN: c_long = 4096;
 
@@ -15,7 +15,6 @@ pub struct XWrap {
     atoms: XAtom
 }
 
-#[allow(dead_code)]
 impl XWrap {
     pub fn new() -> Self {
         let xlib = xlib::Xlib::open().expect("Couldn't not connect to Xorg Server");
@@ -57,17 +56,17 @@ impl XWrap {
         unsafe{
             (self.xlib.XSendEvent)(self.display, window, propagate, mask, event);
         }
-        self.sync();
+        self.flush();
+    }
+
+    fn flush(&self) {
+        unsafe { (self.xlib.XFlush)(self.display) };
     }
 
     pub fn sync(&self) {
         unsafe{
             (self.xlib.XSync)(self.display, xlib::False);
         }
-    }
-
-    pub fn flush(&self) {
-        unsafe { (self.xlib.XFlush)(self.display) };
     }
 
     fn get_property(&self, window: xlib::Window, property: xlib::Atom, r#type: xlib::Atom) -> Option<(c_ulong, *const c_uchar)> {
@@ -138,7 +137,7 @@ impl XWrap {
     }
 
     pub fn set_number_of_desktops(&self, num: u32) {
-        self.set_window_prop(self.root, self.atoms.NetNumberOfDesktops, &[num])
+        self.set_window_prop(self.root, self.atoms.NetNumberOfDesktops, &[num]);
     }
 
     pub fn get_current_desktop(&self) -> Option<u32> {
@@ -147,6 +146,7 @@ impl XWrap {
 
     pub fn set_current_desktop(&self, idx: u32) {
         self.set_window_prop(self.root, self.atoms.NetCurrentDesktop, &[idx, xlib::CurrentTime as u32]);
+        self.sync();
     }
 
     pub fn get_window_desktop(&self, window: xlib::Window) -> Option<u32> {
@@ -231,5 +231,58 @@ impl XWrap {
             w: width_return as i32,
             h: height_return as i32,
         })
+    }
+
+    pub fn get_window_status(&self, screen: Option<&ScreenStatus>, window: xlib::Window) -> WindowStatus {
+        // name: String, pid: u32, screen: String, desktop: u32, state: WindowState, xyhw: Xyhw
+        let name    = self.get_window_name(window).unwrap_or( "".into() );
+        let pid     = self.get_window_pid(window).unwrap_or(0);
+        let screen  = screen.and_then( |x| Some(x.name.to_owned()) ).unwrap_or( "".into() );
+        let desktop = self.get_window_desktop(window).unwrap_or(0);
+        let state   = self.get_window_states(window);
+        let xyhw    = self.get_window_geometry(window).unwrap_or_default();
+
+        WindowStatus{ name, pid, screen, desktop, state, xyhw }
+    }
+
+    pub fn get_windows_by_filter<F>(&self, filter: F) -> Vec<WindowStatus>
+    where F: Fn(String, u32, u64) -> bool
+    {
+        let mut results = Vec::new();
+
+        for s in self.screens.iter() {
+            let (status, windows) = unsafe {
+                let mut root_return: xlib::Window = std::mem::zeroed();
+                let mut parent_return: xlib::Window = std::mem::zeroed();
+                let mut array: *mut xlib::Window = std::mem::zeroed();
+                let mut length: c_uint = std::mem::zeroed();
+                let status: xlib::Status = (self.xlib.XQueryTree)(
+                    self.display, s.root,
+                    &mut root_return, &mut parent_return, &mut array, &mut length
+                );
+                let windows: &[xlib::Window] = slice::from_raw_parts(array, length as usize);
+
+                (status, windows)
+            };
+
+            match status {
+                1 /* XcmsSuccess */ | 2 /* XcmsSuccessWithCompression */ => {
+                    results.extend(
+                        windows.iter().filter_map(|w| {
+                            let name = self.get_window_name( w.to_owned() ).unwrap_or_default();
+                            let pid  = self.get_window_pid( w.to_owned() ).unwrap_or_default();
+                            let wid  = w.to_owned();
+                            match filter(name, pid, wid) {
+                                true => Some( self.get_window_status(Some(s), *w) ),
+                                false => None
+                            }
+                        })
+                    )
+                }
+                0 /* XcmsFailure */ | _ /* Unknown status*/ => {}
+            };
+        }
+
+        results
     }
 }

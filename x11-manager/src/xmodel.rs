@@ -1,4 +1,3 @@
-use std::cmp;
 use std::ops::Add;
 use std::ops::Sub;
 
@@ -82,10 +81,10 @@ impl Xyhw {
 
 #[derive(Clone, Debug)]
 pub struct ScreenStatus {
-    name: String,
-    screen: xlib::Screen,
-    root: xlib::Window,
-    xyhw: Xyhw,
+    pub name: String,
+    pub screen: xlib::Screen,
+    pub root: xlib::Window,
+    pub xyhw: Xyhw,
 }
 
 impl ScreenStatus {
@@ -97,12 +96,13 @@ impl ScreenStatus {
 
 #[derive(Clone, Debug)]
 pub struct WindowStatus {
-    name: String,
-    pid: u32,
-    screen: String,
-    desktop: u32,
-    state: WindowState,
-    xyhw: Xyhw
+    pub name: String,
+    pub pid: u32,
+    //
+    pub screen: String,
+    pub desktop: u32,
+    pub state: Vec<WindowState>,
+    pub xyhw: Xyhw
 }
 
 impl WindowStatus {
