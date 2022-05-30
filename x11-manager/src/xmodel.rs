@@ -2,23 +2,9 @@ use std::ops::Add;
 use std::ops::Sub;
 
 use x11_dl::xlib;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum WindowState {
-    Modal,
-    Sticky,
-    MaximizedVert,
-    MaximizedHorz,
-    Shaded,
-    SkipTaskbar,
-    SkipPager,
-    Hidden,
-    Fullscreen,
-    Above,
-    Below,
-}
-
-#[derive(Default, Clone, Debug, PartialEq, Copy)]
+#[derive(Default, Serialize, Deserialize, Clone, Debug, PartialEq, Copy)]
 pub struct Xyhw {
     pub x: i32,
     pub y: i32,
@@ -94,14 +80,15 @@ impl ScreenStatus {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WindowStatus {
+    pub xid: u64,
     pub name: String,
     pub pid: u32,
     //
     pub screen: String,
     pub desktop: u32,
-    pub state: Vec<WindowState>,
+    pub states: Vec<String>,
     pub xyhw: Xyhw
 }
 

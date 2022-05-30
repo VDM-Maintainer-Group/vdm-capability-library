@@ -25,6 +25,5 @@
     - return `geometry`, `window state` and `desktop index`, e.g., `wmctrl -lG`;
     - together return with current screen geometry;
       (if screens disconnected, shrink to the northwest corner)
-- [x] get window props by "window id" or "_NET_WM_PID"
-- [ ] set window props by "substring match"
-- [ ] set window props by "window id" or "_NET_WM_PID"
+- [x] get window props by "window xid" or "_NET_WM_PID"
+- [x] set window props by "window xid"

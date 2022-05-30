@@ -3,7 +3,7 @@ use std::{ptr, slice};
 use std::ffi::{CString, };
 use x11_dl::xlib;
 use crate::xatom::XAtom;
-use crate::xmodel::{Xyhw, WindowState, ScreenStatus, WindowStatus};
+use crate::xmodel::{Xyhw, ScreenStatus, WindowStatus};
 
 const MAX_PROPERTY_VALUE_LEN: c_long = 4096;
 
@@ -185,22 +185,41 @@ impl XWrap {
         }
     }
 
-    pub fn get_window_states(&self, window: xlib::Window) -> Vec<WindowState> {
-        self.get_window_states_atoms(window).iter().map(|a| match a {
-                x if x == &self.atoms.NetWMStateModal => WindowState::Modal,
-                x if x == &self.atoms.NetWMStateSticky => WindowState::Sticky,
-                x if x == &self.atoms.NetWMStateMaximizedVert => WindowState::MaximizedVert,
-                x if x == &self.atoms.NetWMStateMaximizedHorz => WindowState::MaximizedHorz,
-                x if x == &self.atoms.NetWMStateShaded => WindowState::Shaded,
-                x if x == &self.atoms.NetWMStateSkipTaskbar => WindowState::SkipTaskbar,
-                x if x == &self.atoms.NetWMStateSkipPager => WindowState::SkipPager,
-                x if x == &self.atoms.NetWMStateHidden => WindowState::Hidden,
-                x if x == &self.atoms.NetWMStateFullscreen => WindowState::Fullscreen,
-                x if x == &self.atoms.NetWMStateAbove => WindowState::Above,
-                x if x == &self.atoms.NetWMStateBelow => WindowState::Below,
-                _ => WindowState::Modal,
-            })
-            .collect()
+    pub fn get_window_states(&self, window: xlib::Window) -> Vec<String> {
+        self.get_window_states_atoms(window).iter().map( |a| self.atoms.get_name(*a).into() ).collect()
+    }
+
+    pub fn set_window_states(&self, window: xlib::Window, states:&[&str]) {
+        let mut maximum_state = -2;
+
+        for state in states.iter() {
+            match state {
+                &"NetWMStateMaximizedVert" | &"NetWMStateMaximizedHorz" => {
+                    maximum_state += 1;
+                }
+                &"NetWMStateHidden" => {
+                    self.set_window_prop(window, self.atoms.NetWMState, &[1, self.atoms.NetWMStateHidden as u32, 0, 1]);
+                }
+                &"NetWMStateShaded" => {
+                    self.set_window_prop(window, self.atoms.NetWMState, &[1, self.atoms.NetWMStateShaded as u32, 0, 1]);
+                }
+                &"NetWMStateFullscreen" => {
+                    self.set_window_prop(window, self.atoms.NetWMState, &[1, self.atoms.NetWMStateFullscreen as u32, 0, 1]);
+                }
+                &"NetWMStateAbove" => {
+                    self.set_window_prop(window, self.atoms.NetWMState, &[1, self.atoms.NetWMStateAbove as u32, 0, 1]);
+                }
+                &"NetWMStateBelow" => {
+                    self.set_window_prop(window, self.atoms.NetWMState, &[1, self.atoms.NetWMStateBelow as u32, 0, 1]);
+                }
+                &"NetWMStateModal"|&"NetWMStateSticky"|&"NetWMStateSkipTaskbar"|&"NetWMStateSkipPager"| _ => {}
+            };
+        }
+        
+        if maximum_state >= 0{
+            self.set_window_prop(window, self.atoms.NetWMState,
+                &[1, self.atoms.NetWMStateMaximizedVert as u32, self.atoms.NetWMStateMaximizedHorz as u32, 1]);
+        }
     }
 }
 
@@ -233,16 +252,34 @@ impl XWrap {
         })
     }
 
+    pub fn set_window_geometry(&self, window: xlib::Window, xyhw: Xyhw) {
+        let mut gravity_flag: u32 = 0x0800;
+        if xyhw.x != 0 { gravity_flag |= 0x0400; }
+        if xyhw.y != 0 { gravity_flag |= 0x0200; }
+        if xyhw.w != 0 { gravity_flag |= 0x0100; }
+        if xyhw.h != 0 { gravity_flag |= 0x0080; }
+        self.set_window_prop(window, self.atoms.NetMoveResizeWindow,
+            &[gravity_flag, xyhw.x as u32, xyhw.y as u32, xyhw.w as u32, xyhw.h as u32]);
+    }
+
     pub fn get_window_status(&self, screen: Option<&ScreenStatus>, window: xlib::Window) -> WindowStatus {
-        // name: String, pid: u32, screen: String, desktop: u32, state: WindowState, xyhw: Xyhw
+        // name: String, pid: u32, screen: String, desktop: u32, state: String, xyhw: Xyhw
         let name    = self.get_window_name(window).unwrap_or( "".into() );
         let pid     = self.get_window_pid(window).unwrap_or(0);
         let screen  = screen.and_then( |x| Some(x.name.to_owned()) ).unwrap_or( "".into() );
         let desktop = self.get_window_desktop(window).unwrap_or(0);
-        let state   = self.get_window_states(window);
+        let states  = self.get_window_states(window);
         let xyhw    = self.get_window_geometry(window).unwrap_or_default();
 
-        WindowStatus{ name, pid, screen, desktop, state, xyhw }
+        WindowStatus{ xid:window, name, pid, screen, desktop, states, xyhw }
+    }
+
+    pub fn set_window_status(&self, window: xlib::Window, status: &WindowStatus) {
+        self.set_window_desktop(window, status.desktop);
+        self.set_window_geometry(window, status.xyhw);
+        self.set_window_states(window, 
+            & status.states.iter().map(std::ops::Deref::deref).collect::<Vec<&str>>()
+        );
     }
 
     pub fn get_windows_by_filter<F>(&self, filter: F) -> Vec<WindowStatus>

@@ -63,6 +63,8 @@ pub struct XAtom {
     pub NetWMStrutPartial: xlib::Atom, //net version - Reserve Screen Space
     pub NetWMStrut: xlib::Atom,        //old version
 
+    pub NetMoveResizeWindow: xlib::Atom,
+
     pub UTF8String: xlib::Atom,
 }
 
@@ -115,10 +117,11 @@ impl XAtom {
             self.NetWMDesktop,
             self.NetWMStrutPartial,
             self.NetWMStrut,
+            
+            self.NetMoveResizeWindow
         ]
     }
-
-    #[allow(dead_code)]
+    
     pub const fn get_name(&self, atom: xlib::Atom) -> &str {
         match atom {
             a if a == self.WMProtocols => "WM_PROTOCOLS",
@@ -167,6 +170,8 @@ impl XAtom {
             a if a == self.NetWMDesktop => "_NET_WM_DESKTOP",
             a if a == self.NetWMStrutPartial => "_NET_WM_STRUT_PARTIAL",
             a if a == self.NetWMStrut => "_NET_WM_STRUT",
+
+            a if a == self.NetMoveResizeWindow => "_NET_MOVERESIZE_WINDOW",
 
             a if a == self.UTF8String => "UTF8_STRING",
             _ => "(UNKNOWN)",
@@ -229,6 +234,8 @@ impl XAtom {
             NetWMDesktop: from(xlib, dpy, "_NET_WM_DESKTOP"),
             NetWMStrutPartial: from(xlib, dpy, "_NET_WM_STRUT_PARTIAL"),
             NetWMStrut: from(xlib, dpy, "_NET_WM_STRUT"),
+
+            NetMoveResizeWindow: from(xlib, dpy, "_NET_MOVERESIZE_WINDOW"),
 
             UTF8String: from(xlib, dpy, "UTF8_STRING"),
         }
