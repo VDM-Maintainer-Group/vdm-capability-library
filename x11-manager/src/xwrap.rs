@@ -276,10 +276,11 @@ impl XWrap {
 
     pub fn set_window_status(&self, window: xlib::Window, status: &WindowStatus) {
         self.set_window_desktop(window, status.desktop);
-        self.set_window_geometry(window, status.xyhw);
         self.set_window_states(window, 
             & status.states.iter().map(std::ops::Deref::deref).collect::<Vec<&str>>()
         );
+        self.set_window_geometry(window, status.xyhw);
+        self.sync();
     }
 
     pub fn get_windows_by_filter<F>(&self, filter: F) -> Vec<WindowStatus>
