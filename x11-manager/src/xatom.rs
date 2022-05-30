@@ -43,6 +43,7 @@ pub struct XAtom {
     pub NetWMStateAbove: xlib::Atom,
     pub NetWMStateBelow: xlib::Atom,
     pub NetWMStateDemandsAttention: xlib::Atom,
+    pub NetWMStateFocused: xlib::Atom,
 
     pub NetWMWindowType: xlib::Atom,
     pub NetWMWindowTypeDesktop: xlib::Atom,
@@ -90,6 +91,7 @@ impl XAtom {
             self.NetWMStateAbove,
             self.NetWMStateBelow,
             self.NetWMStateDemandsAttention,
+            self.NetWMStateFocused,
             self.NetWMActionMove,
             self.NetWMActionResize,
             self.NetWMActionMinimize,
@@ -147,6 +149,8 @@ impl XAtom {
             a if a == self.NetWMStateFullscreen => "NetWMStateFullscreen",
             a if a == self.NetWMStateAbove => "NetWMStateAbove",
             a if a == self.NetWMStateBelow => "NetWMStateBelow",
+            a if a == self.NetWMStateDemandsAttention => "NetWMStateDemandsAttention",
+            a if a == self.NetWMStateFocused => "NetWMStateFocused",
 
             a if a == self.NetWMActionMove => "_NET_WM_ACTION_MOVE",
             a if a == self.NetWMActionResize => "_NET_WM_ACTION_RESIZE",
@@ -203,6 +207,7 @@ impl XAtom {
             NetWMStateAbove: from(xlib, dpy, "_NET_WM_STATE_ABOVE"),
             NetWMStateBelow: from(xlib, dpy, "_NET_WM_STATE_BELOW"),
             NetWMStateDemandsAttention: from(xlib, dpy, "_NET_WM_STATE_DEMANDS_ATTENTION"),
+            NetWMStateFocused: from(xlib, dpy, "_NET_WM_STATE_FOCUSED"),
 
             NetWMAction: from(xlib, dpy, "_NET_WM_ALLOWED_ACTIONS"),
             NetWMActionMove: from(xlib, dpy, "_NET_WM_ACTION_MOVE"),

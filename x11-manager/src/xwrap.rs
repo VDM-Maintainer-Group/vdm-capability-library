@@ -212,7 +212,7 @@ impl XWrap {
                 &"NetWMStateBelow" => {
                     self.set_window_prop(window, self.atoms.NetWMState, &[1, self.atoms.NetWMStateBelow as u32, 0, 1]);
                 }
-                &"NetWMStateModal"|&"NetWMStateSticky"|&"NetWMStateSkipTaskbar"|&"NetWMStateSkipPager"| _ => {}
+                _ => {}
             };
         }
         

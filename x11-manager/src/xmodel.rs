@@ -36,6 +36,7 @@ impl Sub for Xyhw {
     }
 }
 
+#[allow(dead_code)]
 impl Xyhw {
     pub fn new(x:i32, y:i32, h:i32, w:i32) -> Self{
         Self{ x, y, h, w }

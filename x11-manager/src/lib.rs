@@ -68,8 +68,8 @@ fn test() {
 
     let kwargs:String = r#"{"name":"Visual Studio Code"}"#.into();
     let kwargs = CString::new(kwargs.clone()).unwrap().into_raw();
-    let status_cstr = unsafe {
+    let status_str = unsafe {
         CString::from_raw( get_windows_by_name(kwargs) ).into_string().unwrap()
     };
-    println!("{}", status_cstr);
+    println!("{}", status_str);
 }
