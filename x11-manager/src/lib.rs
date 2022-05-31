@@ -3,7 +3,7 @@ mod xwrap;
 mod xmodel;
 
 use xwrap::XWrap;
-use xmodel::WindowStatus;
+use xmodel::{Xyhw, WindowStatus};
 use serde_wrapper::jsonify;
 
 #[no_mangle]#[jsonify]
@@ -47,14 +47,20 @@ pub fn get_windows_by_xid(xid: u64) -> Vec<WindowStatus> {
     XWrap::new().get_windows_by_filter( |_, _, w_xid| w_xid==xid )
 }
 
-// #[no_mangle]#[jsonify]
-pub fn set_window_by_xid(xid: u64, status: WindowStatus) {
+#[no_mangle]#[jsonify]
+pub fn set_window_by_xid(xid: u64, desktop:u32, states: Vec<String>, xyhw: Xyhw) -> u32 {
+    let status = WindowStatus {
+        xid, desktop, states, xyhw, ..WindowStatus::default()
+    };
     XWrap::new().set_window_status(xid, &status);
+
+    0
 }
 
 #[test]
 fn test() {
     use std::ffi::CString;
+    use serde_json;
 
     let kwargs:String = r#"{}"#.into();
     let kwargs_1 = CString::new( kwargs.clone() ).unwrap().into_raw();
@@ -72,4 +78,12 @@ fn test() {
         CString::from_raw( get_windows_by_name(kwargs) ).into_string().unwrap()
     };
     println!("{}", status_str);
+
+    let mut status: Vec<WindowStatus> = serde_json::from_str(&status_str).unwrap();
+    status[0].xyhw.x += 48;
+    status[0].xyhw.y += 27;
+    // let new_status = serde_json::to_string( &status[0] ).unwrap();
+    // let kwargs:String = format!("{{ \"xid\":\"{}\", \"status\":{} }}", status[0].xid, new_status);
+    // let kwargs_1 = CString::new( kwargs.clone() ).unwrap().into_raw();
+    // set_window_by_xid( kwargs_1 );
 }

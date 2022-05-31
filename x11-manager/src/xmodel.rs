@@ -81,7 +81,7 @@ impl ScreenStatus {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Default, Serialize, Deserialize, Clone, Debug)]
 pub struct WindowStatus {
     pub xid: u64,
     pub name: String,
