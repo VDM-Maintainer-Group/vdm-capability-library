@@ -1,0 +1,62 @@
+{
+    "name": "x11-manager",
+    "type": "rust",
+    "version": "0.1.0",
+    
+    "build": {
+        "dependency": {
+            "cargo": []
+        },
+        "script": [
+            "cargo build --release"
+        ],
+        "output": [
+            "./target/release/libx11_manager.so@libx11_manager.so"
+        ]
+    },
+
+    "clean": [
+        "target/release"
+    ],
+
+    "runtime": {
+        "dependency": {},
+        "status": "echo Capable",
+        "enable": [],
+        "disable": []
+    },
+
+    "metadata": {
+        "get_number_of_desktops": {
+            "restype": "Number",
+            "args": []
+        },
+        "get_current_desktop": {
+            "restype": "Number",
+            "args": []
+        },
+
+        "get_windows_by_name": {
+            "restype": "Array<Object>",
+            "args": [{"name":"String"}]
+        },
+        "get_windows_by_pid": {
+            "restype": "Array<Object>",
+            "args": [{"pid":"Number"}]
+        },
+        "get_windows_by_xid": {
+            "restype": "Array<Object>",
+            "args": [{"xid":"Number"}]
+        },
+
+        "set_window_by_xid": {
+            "restype": "Number",
+            "args": [
+                {"xid":"Number"},
+                {"desktop":"Number"},
+                {"states":"Array<String>"},
+                {"xyhw": "Object"}
+            ]
+        }
+    }
+}
