@@ -190,12 +190,13 @@ impl XWrap {
     }
 
     pub fn set_window_states(&self, window: xlib::Window, states:&[&str]) {
-        let mut maximum_state = -2;
-
         for state in states.iter() {
             match state {
-                &"NetWMStateMaximizedVert" | &"NetWMStateMaximizedHorz" => {
-                    maximum_state += 1;
+                &"NetWMStateMaximizedVert" => {
+                    self.set_window_prop(window, self.atoms.NetWMState, &[1, self.atoms.NetWMStateMaximizedVert as u32, 0, 1]);
+                }
+                &"NetWMStateMaximizedHorz" => {
+                    self.set_window_prop(window, self.atoms.NetWMState, &[1, self.atoms.NetWMStateMaximizedHorz as u32, 0, 1]);
                 }
                 &"NetWMStateHidden" => {
                     self.set_window_prop(window, self.atoms.NetWMState, &[1, self.atoms.NetWMStateHidden as u32, 0, 1]);
@@ -214,11 +215,6 @@ impl XWrap {
                 }
                 _ => {}
             };
-        }
-        
-        if maximum_state >= 0{
-            self.set_window_prop(window, self.atoms.NetWMState,
-                &[1, self.atoms.NetWMStateMaximizedVert as u32, self.atoms.NetWMStateMaximizedHorz as u32, 1]);
         }
     }
 }
