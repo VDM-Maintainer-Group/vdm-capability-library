@@ -1,5 +1,5 @@
 # X11 Manager
-**This capability aims at: provide X11 window and desktop control via EWMH and ICCCM.**
+**This capability aims at: provide X11 window and desktop control via `libxcb`.**
 
 
 
@@ -11,10 +11,25 @@
 -----
 
 ### Dependency
-- `libxcb-util-dev`
+- `cargo`, `libxcb-util-dev`
 
 ### Structure
-> TBD.
+
+- `src` (the Rust source code)
+
+### Build
+
+- Manually build:
+
+  ```bash
+  cargo build --release
+  ```
+
+### Test
+
+```bash
+cargo test -- --nocapture
+```
 
 ### TODO
 - [x] get/set number of desktops

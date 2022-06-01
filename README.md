@@ -15,7 +15,7 @@ Feel free to *use or contribute* every best practice in this repo.
 
 ### Dependency
 
-**Python 3**: `pip3 install halo pyyaml`
+**Python 3**: `halo`, `pyyaml`
 
 ### Structure
 
@@ -23,11 +23,20 @@ Feel free to *use or contribute* every best practice in this repo.
   
   > find out files one application is watching on, with inotify.
 
+- [x11-manager](./x11-manager)
+
+  > provide X11 window and desktop control via `libxcb`.
 
 ### Build
 
 ```bash
 ./build.py build
+```
+
+### Install
+
+```bash
+./build.py install
 ```
 
 ### Test
