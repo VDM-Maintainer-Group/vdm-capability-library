@@ -68,7 +68,7 @@ fn test() {
         CString::from_raw( get_number_of_desktops(kwargs_1) ).into_string().unwrap()
     } );
     let kwargs_1 = CString::new( kwargs.clone() ).unwrap().into_raw();
-    println!( "Current desktops: {}.", unsafe{
+    println!( "Current desktop: {}.", unsafe{
         CString::from_raw( get_current_desktop(kwargs_1) ).into_string().unwrap()
     } );
 
@@ -82,8 +82,19 @@ fn test() {
     let mut status: Vec<WindowStatus> = serde_json::from_str(&status_str).unwrap();
     status[0].xyhw.x += 48;
     status[0].xyhw.y += 27;
-    // let new_status = serde_json::to_string( &status[0] ).unwrap();
-    // let kwargs:String = format!("{{ \"xid\":\"{}\", \"status\":{} }}", status[0].xid, new_status);
-    // let kwargs_1 = CString::new( kwargs.clone() ).unwrap().into_raw();
-    // set_window_by_xid( kwargs_1 );
+
+    let kwargs = format!("{{
+        \"xid\": {},
+        \"desktop\": {},
+        \"states\": {:?},
+        \"xyhw\": {{ \"x\":{},\"y\":{},\"h\":{},\"w\":{} }}
+    }}", status[0].xid, status[0].desktop, status[0].states,
+         status[0].xyhw.x,status[0].xyhw.y,status[0].xyhw.h,status[0].xyhw.w)
+    ;
+
+    let kwargs_1 = CString::new( kwargs.clone() ).unwrap().into_raw();
+    let res = unsafe {
+        CString::from_raw( set_window_by_xid( kwargs_1 ) ).into_string().unwrap()
+    };
+    println!("res: {}", res);
 }
