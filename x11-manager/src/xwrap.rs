@@ -240,6 +240,8 @@ impl XWrap {
         let mut root_return: xlib::Window = 0;
         let mut x_return: c_int = 0;
         let mut y_return: c_int = 0;
+        let mut real_x: c_int   = 0;
+        let mut real_y: c_int   = 0;
         let mut width_return: c_uint = 0;
         let mut height_return: c_uint = 0;
         let mut border_width_return: c_uint = 0;
@@ -251,14 +253,21 @@ impl XWrap {
                 &mut root_return, &mut x_return, &mut y_return, &mut width_return, &mut height_return,
                 &mut border_width_return, &mut depth_return
             );
+            if status == 0 {
+                return None
+            }
 
+            let status = (self.xlib.XTranslateCoordinates)(
+                self.display, window, root_return, x_return, y_return,
+                &mut real_x, &mut real_y, &mut root_return
+            );
             if status == 0 {
                 return None
             }
         }
         Some(Xyhw {
-            x: x_return,
-            y: y_return,
+            x: real_x,
+            y: real_y,
             w: width_return as i32,
             h: height_return as i32,
         })
