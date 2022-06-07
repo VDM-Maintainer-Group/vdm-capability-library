@@ -171,6 +171,22 @@ impl XWrap {
         self.get_window_prop(window, self.atoms.NetWMPid)
     }
 
+    pub fn get_client_list(&self, root: Option<xlib::Window>) -> Vec<xlib::Window> {
+        let root = root.unwrap_or( self.root );
+
+        if let Some( (nitems_return, prop_return) ) = self.get_property(root, self.atoms.NetClientList, xlib::XA_WINDOW) {
+            unsafe {
+                #[allow(clippy::cast_lossless, clippy::cast_ptr_alignment)]
+                let ptr = prop_return as *const c_ulong;
+                let results: &[xlib::Window] = slice::from_raw_parts(ptr, nitems_return as usize);
+                results.to_vec()
+            }
+        }
+        else {
+            vec![]
+        }
+    }
+
     pub fn get_window_states_atoms(&self, window: xlib::Window) -> Vec<xlib::Atom> {
         if let Some( (nitems_return, prop_return) ) = self.get_property(window, self.atoms.NetWMState, xlib::XA_ATOM) {
             unsafe {
@@ -285,36 +301,19 @@ impl XWrap {
         let mut results = Vec::new();
 
         for s in self.screens.iter() {
-            let (status, windows) = unsafe {
-                let mut root_return: xlib::Window = std::mem::zeroed();
-                let mut parent_return: xlib::Window = std::mem::zeroed();
-                let mut array: *mut xlib::Window = std::mem::zeroed();
-                let mut length: c_uint = std::mem::zeroed();
-                let status: xlib::Status = (self.xlib.XQueryTree)(
-                    self.display, s.root,
-                    &mut root_return, &mut parent_return, &mut array, &mut length
-                );
-                let windows: &[xlib::Window] = slice::from_raw_parts(array, length as usize);
+            let windows = self.get_client_list( Some(s.root) );
 
-                (status, windows)
-            };
-
-            match status {
-                1 /* XcmsSuccess */ | 2 /* XcmsSuccessWithCompression */ => {
-                    results.extend(
-                        windows.iter().filter_map(|w| {
-                            let name = self.get_window_name( w.to_owned() ).unwrap_or_default();
-                            let pid  = self.get_window_pid( w.to_owned() ).unwrap_or_default();
-                            let wid  = w.to_owned();
-                            match filter(name, pid, wid) {
-                                true => Some( self.get_window_status(Some(s), *w) ),
-                                false => None
-                            }
-                        })
-                    )
-                }
-                0 /* XcmsFailure */ | _ /* Unknown status*/ => {}
-            };
+            results.extend(
+                windows.iter().filter_map(|w| {
+                    let name = self.get_window_name( w.to_owned() ).unwrap_or_default();
+                    let pid  = self.get_window_pid( w.to_owned() ).unwrap_or_default();
+                    let wid  = w.to_owned();
+                    match filter(name, pid, wid) {
+                        true => Some( self.get_window_status(Some(s), *w) ),
+                        false => None
+                    }
+                })
+            );
         }
 
         results
