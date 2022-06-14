@@ -1,0 +1,19 @@
+{
+    "name": "VDM Chrome APP",
+    "description": "Chrome APP for VDM.",
+    "version": "0.1",
+    "manifest_version": 2,
+
+    "permissions": ["tabs", "nativeMessaging"],
+    "background": {
+        "scripts": ["background.js"],
+        "persistent": false
+    },
+
+    "icons": {
+        "16": "images/forum-16.png",
+        "32": "images/forum-32.png",
+        "48": "images/forum-48.png",
+        "128": "images/forum-128.png"
+    }
+}
