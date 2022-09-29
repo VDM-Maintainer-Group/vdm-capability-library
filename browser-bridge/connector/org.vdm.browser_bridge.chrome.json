@@ -1,7 +1,7 @@
 {
-    "name": "org.vdm.browser_bridge",
+    "name": "org.vdm.browser_bridge.chrome",
     "description": "Native Messaging host configuration for VDM",
-    "path": "/usr/bin/vdm-chrome-host",
+    "path": "/opt/browser-bridge/connector_chrome.py",
     "type": "stdio",
     "allowed_origins": [
         "chrome-extension://kbeahiliifapleakppahedbiekhkddce/"

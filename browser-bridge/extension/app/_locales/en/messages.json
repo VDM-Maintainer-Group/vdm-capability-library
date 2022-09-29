@@ -1,0 +1,18 @@
+{
+  "appName": {
+    "message": "vdm-browser-bridge",
+    "description": "The name of the application"
+  },
+  "appShortName": {
+    "message": "browser-bridge",
+    "description": "The short_name (maximum of 12 characters recommended) is a short version of the app's name."
+  },
+  "appDescription": {
+    "message": "It provides your browser with VDM-Compatibility together with a connector program.",
+    "description": "The description of the application"
+  },
+  "browserActionTitle": {
+    "message": "vdm-browser-bridge",
+    "description": "The title of the browser action button"
+  }
+}
