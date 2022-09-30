@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import asyncio, threading
 import struct, json, random, string
 from pathlib import Path
 from sys import stdin, stdout
@@ -82,13 +82,22 @@ class BrowserBridgeInterface(dbus.service.Object):
 
     pass
 
+def start_glib_thread():
+    BrowserBridgeInterface('test')
+    GLib.MainLoop().run()
+
+async def handle_event(browser_name):
+    while True:
+        await asyncio.sleep(1)
+    pass
+
 def main():
     try:
         browser_name = FILE_NAME_MAP[ Path(__file__).stem ]
     except:
         browser_name = 'test'
-    BrowserBridgeInterface(browser_name)
-    GLib.MainLoop().run()
+    threading.Thread(target=start_glib_thread, daemon=True, args=()).start()
+    asyncio.run( handle_event(browser_name) )
     pass
 
 if __name__ == "__main__":
