@@ -35,6 +35,7 @@
   "permissions": [
     "nativeMessaging",
     "tabs",
+    "windows",
     "<all_urls>"
   ]
 }
