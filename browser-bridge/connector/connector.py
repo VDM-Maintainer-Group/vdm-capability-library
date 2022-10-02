@@ -32,14 +32,14 @@ class BrowserConnector:
         self.writer = writer
         pass
 
-    async def __nm_recv(self) -> dict:
+    async def nm_recv(self) -> dict:
         RAW_LEN = struct.calcsize('@I')
         raw_len = await self.reader.read(RAW_LEN)
         buf_len = struct.unpack("@I", raw_len)[0]
         buf = await self.reader.read(buf_len).decode('utf-8')
         return json.loads(buf)
 
-    async def __nm_send(self, msg: dict):
+    async def nm_send(self, msg: dict):
         buf     = json.dumps(msg).encode('utf-8')
         buf_len = struct.pack('@I', len(buf))
         self.writer.write(buf_len)
@@ -49,8 +49,8 @@ class BrowserConnector:
 
     async def nm_request_sync(self, cmd:str) -> str:
         ctrl_msg = {'req':cmd}
-        await self.__nm_send(ctrl_msg)
-        return await self.__nm_recv()
+        await self.nm_send(ctrl_msg)
+        return await self.nm_recv()
 
     pass
 
@@ -136,15 +136,33 @@ async def handle_event(browser_name):
     (reader, writer) = await connect_stdin_stdout()
     connector = BrowserConnector(reader, writer)
     recv_queue = Queue()
+    ifaces = dict()
     ##
     while True:
-        #TODO: handle events
-        ##
+        ## handle events from stdin
+        if not reader.at_eof():
+            res = await connector.nm_recv()
+            res_type, w_id = res['res'], res['w_id']
+            if res_type=='event':
+                if res['name']=='window_created':
+                    tx_q = Queue.queue()
+                    _iface = BrowserWindowInterface(browser_name, w_id, recv_queue, tx_q)
+                    ifaces[ w_id ] = {
+                        'iface': _iface,
+                        'tx_q': tx_q
+                    }
+                elif res['name']=='window_removed':
+                    ifaces.pop( w_id )
+                    pass
+            else:
+                ifaces[ w_id ]['tx_q'].push(res)
+        ## handle events from d-bus (on another thread)
         try:
             req = recv_queue.get_nowait()
+            connector.nm_send( req )
         except:
             pass
-
+        ## obey the event loop on current thread
         await asyncio.sleep(0)
     pass
 
