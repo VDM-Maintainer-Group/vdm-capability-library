@@ -93,9 +93,13 @@ class BrowserWindowInterface(dbus.service.Object):
         return ret
     
     @dbus.service.method(dbus_interface='org.VDMCompatible.src',
-                        in_signature='s')
-    def Resume(self, stat:str):
-        ret = self.sync_ctrl({'req':'resume', 'w_id':self.w_id, 'stat':stat})
+                        in_signature='ss')
+    def Resume(self, stat:str, new:bool):
+        if new:
+            _req = 'new'
+        else:
+            _req = 'resume'
+        ret = self.sync_ctrl({'req':_req, 'w_id':self.w_id, 'stat':stat})
         return ret
 
     @dbus.service.method(dbus_interface='org.VDMCompatible.src')

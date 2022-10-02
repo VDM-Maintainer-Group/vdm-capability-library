@@ -33,9 +33,27 @@ port.onMessage.addListener((msg) => {
             })
             break;
         case 'resume':
+            browser.tabs.query({'windowId':w_id})
+            .then((tabs) => {
+                // create new tabs
+                msg['stat'].map((stat) => {
+                    browser.tabs.create({'url':stat['url']})
+                })
+                .then((tab) => {}, (err) => {
+                    console.log(err)
+                });
+                // close old tabs
+                let id_tabs = tabs.map( (x) => x['id'] );
+                browser.tabs.remove(id_tabs)
+                .then(()=>{}, (err) => {
+                    console.log(err)
+                });
+            });
+            break;
+        case 'new':
             let stat = JSON.parse( msg['stat'] )
             let (x,y,h,w) = stat['xyhw']
-            browser.windows.update(w_id, {
+            browser.windows.create({
                 'incognito':stat['incognito'], 'url':stat['url'],
                 'left':x, 'top':y, 'height':h, 'width':w
             }, (details) => {
