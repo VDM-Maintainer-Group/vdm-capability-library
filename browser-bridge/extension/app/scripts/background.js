@@ -1,6 +1,3 @@
-browser.runtime.onInstalled.addListener((details) => {
-  console.log('previousVersion', details.previousVersion)
-})
 
 let port = browser.runtime.connectNative('org.vdm.browser_bridge');
 console.log(port)
@@ -8,26 +5,42 @@ console.log(port)
 browser.windows.onCreated.addListener((window) => {
     if (window.type=='normal') {
         res = {'w_id':window.id, 'res':'event', 'name':'window_created'}
-        port.postMessage( JSON.stringify(res) )
+        port.postMessage( res )
     }
 });
 
 browser.windows.onRemoved.addListener((windowId) => {
     res = {'w_id':windowId, 'res':'event', 'name':'window_removed'}
-    port.postMessage( JSON.stringify(res) )
+    port.postMessage( res )
 });
+
+function post_message(w_id, ret) {
+    res = {'w_id':w_id, 'res':ret};
+    port.postMessage( res );
+}
 
 port.onMessage.addListener((msg) => {
     let w_id = msg['w_id'];
-    let ret = -1;
 
     switch(msg['req']) {
+        case 'sync':
+            browser.windows.getAll({ windowTypes: ["normal"] })
+            .then((windows) => {
+                ret = windows.map( w => w.id );
+                post_message(w_id, ret);
+            }, (err) => {
+                console.error(err);
+                post_message(w_id, -1);
+            });
+            break;
+
         case 'save':
             browser.tabs.query({ 'windowId':w_id })
             .then((tabs) => {
-                ret = tabs
+                post_message(w_id, tabs);
             }, (err) => {
-                console.log(err)
+                console.error(err)
+                post_message(w_id, -1);
             })
             break;
         case 'resume':
@@ -37,14 +50,19 @@ port.onMessage.addListener((msg) => {
                 msg['stat'].map((stat) => {
                     browser.tabs.create({'url':stat['url']})
                 })
-                .then((tab) => {}, (err) => {
-                    console.log(err)
-                });
-                // close old tabs
-                let id_tabs = tabs.map( (x) => x['id'] );
-                browser.tabs.remove(id_tabs)
-                .then(()=>{}, (err) => {
-                    console.log(err)
+                .then((_) => {
+                    // close old tabs
+                    let id_tabs = tabs.map( x => x['id'] );
+                    browser.tabs.remove(id_tabs)
+                    .then(()=>{
+                        post_message(w_id, ret);
+                    }, (err) => {
+                        console.error(err)
+                        post_message(w_id, -1);
+                    });
+                }, (err) => {
+                    console.error(err)
+                    post_message(w_id, -1);
                 });
             });
             break;
@@ -54,18 +72,19 @@ port.onMessage.addListener((msg) => {
             browser.windows.create({
                 'incognito':stat['incognito'], 'url':stat['url'],
                 'left':x, 'top':y, 'height':h, 'width':w
-            }, (details) => {
-                ret = 0
+            }, (_) => {
+                post_message(w_id, 0);
             }, (err) => {
-                console.log(err)
+                console.error(err)
+                post_message(w_id, -1);
             });
             break;
         case 'close':
             browser.windows.remove(w_id)
             .then(() => {
-                ret = 0
+                post_message(w_id, 0);
             }, (err) => {
-                console.log(err)
+                console.error(err)
             })
             break;
         
@@ -75,23 +94,21 @@ port.onMessage.addListener((msg) => {
                 'title':tab_name, 'discarded':true, 'active':true
             })
             .then((tab) => {
-                ret = tab.id
+                post_message(w_id, tab.id);
             }, (err) => {
-                console.log(err)
+                console.error(err)
+                post_message(w_id, -1);
             });
             break;
-        //
         case 'close_temp':
             tab_id = msg['t_id']
             browser.tabs.remove( tab_id )
             .then(() => {
-                ret = 0
+                post_message(w_id, 0);
             }, (err) => {
-                console.log(err)
+                console.error(err)
+                post_message(w_id, -1);
             });
             break;
     };
-
-    res = {'w_id':w_id, 'res':ret}
-    postMessage.postMessage( JSON.stringify(res) )
 });

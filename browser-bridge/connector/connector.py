@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import asyncio, threading
+from multiprocessing.connection import wait
 from queue import Queue
 import struct, json, random, string
 from pathlib import Path
@@ -36,12 +37,12 @@ class BrowserConnector:
         self.writer = writer
         pass
 
-    async def nm_recv(self) -> str:
+    async def nm_recv(self) -> dict:
         RAW_LEN = struct.calcsize('@I')
         raw_len = await self.reader.read(RAW_LEN)
         buf_len = struct.unpack("@I", raw_len)[0]
         buf = ( await self.reader.read(buf_len) ).decode('utf-8')
-        return json.loads( json.loads(buf) )
+        return json.loads(buf)
 
     async def nm_send(self, msg: dict):
         buf     = json.dumps(msg).encode('utf-8')
@@ -51,11 +52,10 @@ class BrowserConnector:
         await self.writer.drain()
         pass
 
-    async def nm_request_sync(self, cmd:str) -> dict:
-        ctrl_msg = {'req':cmd}
-        await self.nm_send(ctrl_msg)
-        return await self.nm_recv()
-
+    async def nm_request_sync(self, msg:dict) -> dict:
+        await self.nm_send(msg)
+        ret = await self.nm_recv()
+        return ret
     pass
 
 class BrowserWindowInterface(dbus.service.Object):
@@ -139,10 +139,19 @@ async def handle_event(browser_name):
     (reader, writer) = await connect_stdin_stdout()
     connector = BrowserConnector(reader, writer)
     recv_queue = Queue()
+    ## sync existing windows
     ifaces = dict()
-    ##
+    res = await connector.nm_request_sync({'req':'sync', 'w_id':0})
+    for w_id in res['res']:
+        tx_q = Queue()
+        _iface = BrowserWindowInterface(browser_name, w_id, recv_queue, tx_q)
+        ifaces[ w_id ] = {
+            'iface': _iface,
+            'tx_q': tx_q
+        }
+    ## handling for two creators
     while True:
-        ## handle events from stdin
+        ## handle events from stdin (on main thread)
         try:
             res = await asyncio.wait_for( connector.nm_recv(), timeout=0.01 )
             logging.info(f'{res}')
