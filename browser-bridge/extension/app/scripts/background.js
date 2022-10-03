@@ -12,11 +12,9 @@ browser.windows.onCreated.addListener((window) => {
     }
 });
 
-browser.windows.onRemoved.addListener((window) => {
-    if (window.type=='normal') {
-        res = {'w_id':window.id, 'res':'event', 'name':'window_removed'}
-        port.postMessage( JSON.stringify(res) )
-    }
+browser.windows.onRemoved.addListener((windowId) => {
+    res = {'w_id':windowId, 'res':'event', 'name':'window_removed'}
+    port.postMessage( JSON.stringify(res) )
 });
 
 port.onMessage.addListener((msg) => {

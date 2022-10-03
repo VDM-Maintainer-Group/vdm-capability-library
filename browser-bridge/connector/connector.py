@@ -11,6 +11,10 @@ from gi.repository import GLib
 from pyvdm.interface import CapabilityLibrary
 xm = CapabilityLibrary.CapabilityHandleLocal('x11-manager')
 
+import logging, traceback
+logging.basicConfig(format='%(asctime)s %(message)s', encoding='utf-8', level=logging.INFO,
+    filename='/tmp/browser-bridge.log', filemode='w')
+
 FILE_NAME_MAP = {
     'connector_chrome': 'google-chrome',
     'connector_firefox': 'firefox-esr',
@@ -32,12 +36,12 @@ class BrowserConnector:
         self.writer = writer
         pass
 
-    async def nm_recv(self) -> dict:
+    async def nm_recv(self) -> str:
         RAW_LEN = struct.calcsize('@I')
         raw_len = await self.reader.read(RAW_LEN)
         buf_len = struct.unpack("@I", raw_len)[0]
-        buf = await self.reader.read(buf_len).decode('utf-8')
-        return json.loads(buf)
+        buf = ( await self.reader.read(buf_len) ).decode('utf-8')
+        return json.loads( json.loads(buf) )
 
     async def nm_send(self, msg: dict):
         buf     = json.dumps(msg).encode('utf-8')
@@ -47,7 +51,7 @@ class BrowserConnector:
         await self.writer.drain()
         pass
 
-    async def nm_request_sync(self, cmd:str) -> str:
+    async def nm_request_sync(self, cmd:str) -> dict:
         ctrl_msg = {'req':cmd}
         await self.nm_send(ctrl_msg)
         return await self.nm_recv()
@@ -60,7 +64,6 @@ class BrowserWindowInterface(dbus.service.Object):
         self.tx_q, self.rx_q = tx_q, rx_q
         ##
         self.xid = 0
-        self.set_xid()
         self.unique = ''.join(random.choices(string.ascii_letters, k=5))
         ##
         bus_name = f'org.VDMCompatible.{self.name}.{self.unique}'
@@ -70,7 +73,7 @@ class BrowserWindowInterface(dbus.service.Object):
 
     def sync_ctrl(self, cmd):
         self.tx_q.put(cmd)
-        ret = self.rx_q.get() #blocking
+        ret = self.rx_q.get() #FIXME: blocking
         return json.dumps(ret)
 
     def set_xid(self):
@@ -140,26 +143,33 @@ async def handle_event(browser_name):
     ##
     while True:
         ## handle events from stdin
-        if not reader.at_eof():
-            res = await connector.nm_recv()
+        try:
+            res = await asyncio.wait_for( connector.nm_recv(), timeout=0.01 )
+            logging.info(f'{res}')
             res_type, w_id = res['res'], res['w_id']
             if res_type=='event':
                 if res['name']=='window_created':
-                    tx_q = Queue.queue()
+                    tx_q = Queue()
                     _iface = BrowserWindowInterface(browser_name, w_id, recv_queue, tx_q)
                     ifaces[ w_id ] = {
                         'iface': _iface,
                         'tx_q': tx_q
                     }
                 elif res['name']=='window_removed':
-                    ifaces.pop( w_id )
+                    _val = ifaces.pop( w_id )
+                    _val['iface'].remove_from_connection()
+                    # _val['iface'].connection.close()
                     pass
             else:
                 ifaces[ w_id ]['tx_q'].push(res)
+        except asyncio.exceptions.TimeoutError:
+            pass
+        except:
+            logging.error( traceback.format_exc() )
         ## handle events from d-bus (on another thread)
         try:
             req = recv_queue.get_nowait()
-            connector.nm_send( req )
+            await connector.nm_send( req )
         except:
             pass
         ## obey the event loop on current thread
