@@ -107,7 +107,7 @@ class BrowserWindowInterface(dbus.service.Object):
         self.sync_ctrl({'req':'close', 'w_id':self.w_id})
         pass
 
-    @dbus.service.method(interface=dbus.PROPERTIES_IFACE,
+    @dbus.service.method(dbus_interface=dbus.PROPERTIES_IFACE,
                          in_signature='ss', out_signature='v')
     def Get(self, interface_name, property_name):
         if interface_name=='org.VDMCompatible.src' and property_name=='xid':
@@ -117,7 +117,7 @@ class BrowserWindowInterface(dbus.service.Object):
                     'interface %s not found.'%interface_name)
         pass
 
-    @dbus.service.method(interface=dbus.PROPERTIES_IFACE,
+    @dbus.service.method(dbus_interface=dbus.PROPERTIES_IFACE,
                          in_signature='s', out_signature='a{sv}')
     def GetAll(self, interface_name):
         if interface_name == 'org.VDMCompatible.src':

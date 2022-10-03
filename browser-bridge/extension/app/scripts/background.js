@@ -52,7 +52,7 @@ port.onMessage.addListener((msg) => {
             break;
         case 'new':
             let stat = JSON.parse( msg['stat'] )
-            let (x,y,h,w) = stat['xyhw']
+            let x,y,h,w = stat['xyhw']
             browser.windows.create({
                 'incognito':stat['incognito'], 'url':stat['url'],
                 'left':x, 'top':y, 'height':h, 'width':w
