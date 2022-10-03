@@ -67,7 +67,7 @@ class BrowserWindowInterface(dbus.service.Object):
         self.unique = ''.join(random.choices(string.ascii_letters, k=5))
         ##
         bus_name = f'org.VDMCompatible.{self.name}.{self.unique}'
-        conn = dbus.service.BusName(bus_name, bus=dbus.SessionBus())
+        conn = dbus.service.BusName(bus_name, bus=dbus.SessionBus(private=True))
         super().__init__(conn, '/')
         pass
 
@@ -158,7 +158,6 @@ async def handle_event(browser_name):
                 elif res['name']=='window_removed':
                     _val = ifaces.pop( w_id )
                     _val['iface'].remove_from_connection()
-                    # _val['iface'].connection.close()
                     pass
             else:
                 ifaces[ w_id ]['tx_q'].push(res)
@@ -169,6 +168,7 @@ async def handle_event(browser_name):
         ## handle events from d-bus (on another thread)
         try:
             req = recv_queue.get_nowait()
+            logging.info(f'{req}')
             await connector.nm_send( req )
         except:
             pass
