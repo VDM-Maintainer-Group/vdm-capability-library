@@ -71,15 +71,15 @@ class BrowserWindowInterface(dbus.service.Object):
         super().__init__(conn, '/')
         pass
 
-    def sync_ctrl(self, cmd):
+    def sync_ctrl(self, cmd) -> dict:
         self.tx_q.put(cmd)
-        ret = self.rx_q.get() #FIXME: blocking
-        return json.dumps(ret)
+        ret = self.rx_q.get()
+        return ret
 
     def set_xid(self):
         temp_name = f'{self.name}-{self.unique}'
         ret = self.sync_ctrl({'req':'open_temp', 'w_id':self.w_id, 'name':temp_name})
-        t_id = ret['t_id']
+        t_id = ret['res']
         try:
             _window = xm.get_windows_by_name(temp_name)[0]
             self.xid = _window['xid']
@@ -87,13 +87,16 @@ class BrowserWindowInterface(dbus.service.Object):
             self.xid = 0
         finally:
             self.sync_ctrl({'req':'close_temp', 'w_id':self.w_id, 't_id':t_id})
+        logging.info(f'xid: {self.xid}')
         pass
 
     @dbus.service.method(dbus_interface='org.VDMCompatible.src',
                         out_signature='s')
     def Save(self) -> str:
         ret = self.sync_ctrl({'req':'save', 'w_id':self.w_id})
-        return ret
+        if not self.xid:
+            self.set_xid()
+        return json.dumps(ret)
     
     @dbus.service.method(dbus_interface='org.VDMCompatible.src',
                         in_signature='ss')
@@ -103,7 +106,7 @@ class BrowserWindowInterface(dbus.service.Object):
         else:
             _req = 'resume'
         ret = self.sync_ctrl({'req':_req, 'w_id':self.w_id, 'stat':stat})
-        return ret
+        return json.dumps(ret)
 
     @dbus.service.method(dbus_interface='org.VDMCompatible.src')
     def Close(self):
@@ -154,7 +157,6 @@ async def handle_event(browser_name):
         ## handle events from stdin (on main thread)
         try:
             res = await asyncio.wait_for( connector.nm_recv(), timeout=0.01 )
-            logging.info(f'{res}')
             res_type, w_id = res['res'], res['w_id']
             if res_type=='event':
                 if res['name']=='window_created':
@@ -169,7 +171,7 @@ async def handle_event(browser_name):
                     _val['iface'].remove_from_connection()
                     pass
             else:
-                ifaces[ w_id ]['tx_q'].push(res)
+                ifaces[ w_id ]['tx_q'].put(res)
         except asyncio.exceptions.TimeoutError:
             pass
         except:
