@@ -15,6 +15,10 @@ install_connector:
 	cp ./connector/org.vdm.browser_bridge.firefox.json ~/.mozilla/native-messaging-hosts/org.vdm.browser_bridge.json
 # sudo cp ./connector/org.vdm.browser_bridge.firefox.json /usr/lib/mozilla/native-messaging-hosts/org.vdm.browser_bridge.json
 # for microsoft edge
+	@mkdir -p ~/.config/microsoft-edge/NativeMessagingHosts
+	sudo ln -sf /opt/browser-bridge/connector.py /opt/browser-bridge/connector_edge.py
+	cp ./connector/org.vdm.browser_bridge.edge.json ~/.config/microsoft-edge/NativeMessagingHosts/org.vdm.browser_bridge.json
+# sudo cp ./connector/org.vdm.browser_bridge.edge.json /etc/opt/edge/native-messaging-hosts/org.vdm.browser_bridge.json
 
 build_extension:
 	@echo "Not implemented."
