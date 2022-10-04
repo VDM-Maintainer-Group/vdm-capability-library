@@ -1,3 +1,25 @@
+function encrypt_message(msg, callback) {
+    browser.storage.sync.get('digest_passwd')
+    .then((item) => {
+        let pwd = item? 'browser-bridge-undefined' : item;
+        require(['./crypto-js/aes'], (AES) => {
+            let enc_msg = AES.encrypt(msg, pwd).toString();
+            callback(enc_msg);
+        });
+    })
+}
+
+function decrypt_message(msg, callback) {
+    browser.storage.sync.get('digest_passwd')
+    .then((item) => {
+        let pwd = item? 'browser-bridge-undefined' : item;
+        require(['./crypto-js/aes', './crypto-js/enc-utf8'], (AES, enc_Utf8) => {
+            let dec_bytes = AES.decrypt(msg, pwd);
+            let dec_msg = dec_bytes.toString( enc_Utf8 );
+            callback(dec_msg);
+        });
+    })
+}
 
 let port = browser.runtime.connectNative('org.vdm.browser_bridge');
 console.log(port)
@@ -37,7 +59,14 @@ port.onMessage.addListener((msg) => {
         case 'save':
             browser.tabs.query({ 'windowId':w_id })
             .then((tabs) => {
-                post_message(w_id, tabs);
+                let r_tabs = tabs.map((stat) => {return {
+                    'url':stat.url, 'active':stat.active,
+                    // 'title': x.title, 'pinned': x.pinned
+                }});
+                r_tabs = JSON.stringify(r_tabs);
+                encrypt_message(r_tabs, (enc_msg) => {
+                    post_message(w_id, enc_msg)
+                });
             }, (err) => {
                 console.error(err)
                 post_message(w_id, -1);
@@ -45,24 +74,24 @@ port.onMessage.addListener((msg) => {
             break;
         case 'resume':
             browser.tabs.query({'windowId':w_id})
-            .then((tabs) => {
-                // create new tabs
-                msg['stat'].map((stat) => {
-                    browser.tabs.create({'url':stat['url']})
-                })
-                .then((_) => {
+            .then((old_tabs) => {
+                let id_tabs = old_tabs.map( x => x['id'] );
+                decrypt_message(msg['stat'], (dec_msg) => {
+                    // create new tabs
+                    let r_tabs = JSON.parse(dec_msg);
+                    r_tabs.map((stat) => {
+                        browser.tabs.create({
+                            'url':stat.url, 'active':stat.active
+                        }).then((_)=>{}, (_)=>{});
+                    });
                     // close old tabs
-                    let id_tabs = tabs.map( x => x['id'] );
                     browser.tabs.remove(id_tabs)
-                    .then(()=>{
-                        post_message(w_id, ret);
+                    .then(() => {
+                        post_message(w_id, 0);
                     }, (err) => {
                         console.error(err)
                         post_message(w_id, -1);
                     });
-                }, (err) => {
-                    console.error(err)
-                    post_message(w_id, -1);
                 });
             });
             break;

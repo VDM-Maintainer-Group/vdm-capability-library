@@ -33,6 +33,7 @@
   },
   
   "permissions": [
+    "storage",
     "nativeMessaging",
     "tabs",
     "<all_urls>"

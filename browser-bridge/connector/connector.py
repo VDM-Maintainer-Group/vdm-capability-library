@@ -13,7 +13,7 @@ from pyvdm.interface import CapabilityLibrary
 xm = CapabilityLibrary.CapabilityHandleLocal('x11-manager')
 
 import logging, traceback
-logging.basicConfig(format='%(asctime)s %(message)s', encoding='utf-8', level=logging.INFO,
+logging.basicConfig(format='%(asctime)s %(message)s', encoding='utf-8', level=logging.DEBUG,
     filename='/tmp/browser-bridge.log', filemode='w')
 
 FILE_NAME_MAP = {
@@ -71,15 +71,14 @@ class BrowserWindowInterface(dbus.service.Object):
         super().__init__(conn, '/')
         pass
 
-    def sync_ctrl(self, cmd) -> dict:
+    def sync_ctrl(self, cmd):
         self.tx_q.put(cmd)
         ret = self.rx_q.get()
         return ret
 
     def set_xid(self):
         temp_name = f'{self.name}-{self.unique}'
-        ret = self.sync_ctrl({'req':'open_temp', 'w_id':self.w_id, 'name':temp_name})
-        t_id = ret['res']
+        t_id = self.sync_ctrl({'req':'open_temp', 'w_id':self.w_id, 'name':temp_name})
         try:
             _window = xm.get_windows_by_name(temp_name)[0]
             self.xid = _window['xid']
@@ -87,7 +86,6 @@ class BrowserWindowInterface(dbus.service.Object):
             self.xid = 0
         finally:
             self.sync_ctrl({'req':'close_temp', 'w_id':self.w_id, 't_id':t_id})
-        logging.info(f'xid: {self.xid}')
         pass
 
     @dbus.service.method(dbus_interface='org.VDMCompatible.src',
@@ -96,17 +94,14 @@ class BrowserWindowInterface(dbus.service.Object):
         ret = self.sync_ctrl({'req':'save', 'w_id':self.w_id})
         if not self.xid:
             self.set_xid()
-        return json.dumps(ret)
+        return ret
     
     @dbus.service.method(dbus_interface='org.VDMCompatible.src',
                         in_signature='ss')
     def Resume(self, stat:str, new:bool):
-        if new:
-            _req = 'new'
-        else:
-            _req = 'resume'
-        ret = self.sync_ctrl({'req':_req, 'w_id':self.w_id, 'stat':stat})
-        return json.dumps(ret)
+        _req = 'new' if new else 'resume'
+        self.sync_ctrl({'req':_req, 'w_id':self.w_id, 'stat':stat})
+        pass
 
     @dbus.service.method(dbus_interface='org.VDMCompatible.src')
     def Close(self):
@@ -171,7 +166,7 @@ async def handle_event(browser_name):
                     _val['iface'].remove_from_connection()
                     pass
             else:
-                ifaces[ w_id ]['tx_q'].put(res)
+                ifaces[ w_id ]['tx_q'].put( res['res'] )
         except asyncio.exceptions.TimeoutError:
             pass
         except:
@@ -179,7 +174,6 @@ async def handle_event(browser_name):
         ## handle events from d-bus (on another thread)
         try:
             req = recv_queue.get_nowait()
-            logging.info(f'{req}')
             await connector.nm_send( req )
         except:
             pass
