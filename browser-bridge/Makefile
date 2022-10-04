@@ -21,5 +21,9 @@ install_connector:
 # sudo cp ./connector/org.vdm.browser_bridge.edge.json /etc/opt/edge/native-messaging-hosts/org.vdm.browser_bridge.json
 
 build_extension:
-	@echo "Not implemented."
+	(cd extension; npm run build firefox)
+	(cd extension; npm run build chrome)
+	(cd extension; npm run build edge)
+
+install_extension:
 	
