@@ -2,7 +2,7 @@ function encrypt_message(msg, callback) {
     browser.storage.sync.get('digest_passwd')
     .then((items) => {
         let pwd = ('digest_passwd' in items)? items['digest_passwd'] : 'browser-bridge-undefined';
-        require(['./crypto-js/aes'], (AES) => {
+        require(['./bower_components/crypto-js/aes'], (AES) => {
             let enc_msg = AES.encrypt(msg, pwd).toString();
             callback(enc_msg);
         });
@@ -13,7 +13,7 @@ function decrypt_message(msg, callback) {
     browser.storage.sync.get('digest_passwd')
     .then((items) => {
         let pwd = ('digest_passwd' in items)? items['digest_passwd'] : 'browser-bridge-undefined';
-        require(['./crypto-js/aes', './crypto-js/enc-utf8'], (AES, enc_Utf8) => {
+        require(['./bower_components/crypto-js/aes', './bower_components/crypto-js/enc-utf8'], (AES, enc_Utf8) => {
             let dec_bytes = AES.decrypt(msg, pwd);
             let dec_msg = dec_bytes.toString( enc_Utf8 );
             callback(dec_msg);
