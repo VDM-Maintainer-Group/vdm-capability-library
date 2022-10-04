@@ -1,0 +1,19 @@
+{
+  "name": "vdm-browser-bridge",
+  "version": "0.0.1",
+  "description": "It provides your browser with VDM-Compatibility together with a connector program.",
+  "config": {
+    "jwt_issuer": "user:17595090:283",
+    "jwt_sign": "1e731d59770a5e644c788d7f37b3c0639b75c326aa814153cc8107bf3dfb3c72"
+  },
+  "scripts": {
+    "init": "(cd app/scripts; bower install crypto-js)",
+    "dev": "webextension-toolbox dev",
+    "build": "webextension-toolbox build",
+    "sign": "web-ext sign --api-key=$npm_package_config_jwt_issuer --api-secret=$npm_package_config_jwt_sign -a packages -s app"
+  },
+  "devDependencies": {
+    "web-ext": "^7.2.0",
+    "webextension-toolbox": "latest"
+  }
+}

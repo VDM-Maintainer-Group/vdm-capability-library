@@ -1,0 +1,41 @@
+{
+  "name": "__MSG_appName__",
+  "short_name": "__MSG_appShortName__",
+  "description": "__MSG_appDescription__",
+  "version": "0.1.2",
+  "manifest_version": 2,
+  "default_locale": "en",
+  "icons": {
+    "16": "images/icon_16.png",
+    "128": "images/icon_128.png"
+  },
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "browser-bridge@vdm-compatible.org",
+      "strict_min_version": "54.0"
+    }
+  },
+
+  "background": {
+    "scripts": [
+      "scripts/background.js"
+    ]
+  },
+  
+  "page_action": {
+    "default_icon": {
+      "19": "images/icon_19.png",
+      "38": "images/icon_38.png"
+    },
+    "default_title": "__MSG_browserActionTitle__",
+    "default_popup": "pages/popup.html"
+  },
+  
+  "permissions": [
+    "storage",
+    "nativeMessaging",
+    "tabs",
+    "<all_urls>"
+  ]
+}

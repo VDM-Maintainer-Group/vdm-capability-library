@@ -1,0 +1,9 @@
+{
+    "name": "org.vdm.browser_bridge",
+    "description": "Native Messaging host configuration for VDM",
+    "path": "/opt/browser-bridge/connector_firefox.py",
+    "type": "stdio",
+    "allowed_extensions": [
+        "browser-bridge@vdm-compatible.org"
+    ]
+}
