@@ -91,7 +91,7 @@ port.onMessage.addListener((msg) => {
         case 'open_temp':
             tab_name = msg['name']
             browser.tabs.create({
-                'title':tab_name, 'discarded':true, 'url':'/pages/popup.html'
+                'active':true, 'url':`/pages/transition.html?${tab_name}`
             })
             .then((tab) => {
                 post_message(w_id, tab.id);
