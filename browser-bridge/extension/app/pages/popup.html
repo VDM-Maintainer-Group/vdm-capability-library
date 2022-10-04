@@ -1,13 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html data-theme="dark">
 <head>
   <meta charset="utf-8" />
-  <title>Popup</title>
+  <title>VDM Browser Bridge</title>
   <link rel="stylesheet" type="text/css" href="../styles/pico.slim.min.css">
 </head>
 <body>
 
-  <h1>Popup</h1>
+  <main class="container">
+    <hgroup>
+      <h3 style="text-align:center">Browser Bridge Encryption</h3>
+      <h4>Encrypt the dump information with your own password.</h4>
+    </hgroup>
+    <form id="main_form">
+      <label for="original_password">
+        Original Password
+        <input type="password" id="original_password" name="original_password" required />
+        <small id="old_hint" style="color:red; display:none">Original password not correct.</small>
+      </label>
+      <label for="new_password">
+        New Password
+        <input type="password" id="new_password" name="new_password" required />
+        <small id="new_hint" style="color:red; display:none">
+          &#8226; At least 8 characters.<br>
+          &#8226; At least one letter and one number.
+        </small>
+      </label>
+      <label for="confirm_password">
+        Confirm Password
+        <input type="password" id="confirm_password" name="confirm_password" required />
+        <small id="re_hint" style="color:red; display:none">Password not match.</small>
+      </label>
+      <button type="submit" class="secondary">Confirm</button>
+    </form>
+  </main>
 
   <script src="../scripts/popup.js"></script>
 </body>
