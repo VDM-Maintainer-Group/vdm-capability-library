@@ -9,14 +9,29 @@
 -----
 
 ### Dependency
-> TBA
+- `npm`, `nodejs`, `python3-pip`
 
 ### Structure
-> TBA
+- `connector` (connector program and manifest file)
+- `extension` (source code for browser extension)
 
+### Development
+```bash
+sbs dev
+```
 
 ### Build
-> TBA
+```bash
+sbs build
+```
+
+### Install
+```bash
+sbs install
+```
 
 ### Test
-> TBA
+N/A.
+
+### Todo
+- [ ] install extensions via install scripts;
