@@ -16,11 +16,6 @@
 - `extension` (source code for browser extension)
 - `scripts` (used for install connector/extension)
 
-### Development
-```bash
-sbs dev
-```
-
 ### Build
 ```bash
 sbs build
