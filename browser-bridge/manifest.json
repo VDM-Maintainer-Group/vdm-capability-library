@@ -17,15 +17,15 @@
         ],
         "output": [
             "",
-            "./extension/packages/2f7f10ee6d444ae7b168.xpi",
-            "./extension/packages/chrome.crx",
-            "./extension/packages/chrome.pem"
+            "./extension/packages/2f7f10ee6d444ae7b168.xpi@browser-bridge.firefox.xpi",
+            "./extension/packages/chrome.crx@browser-bridge.chrome.crx",
+            "./extension/packages/chrome.pem@browser-bridge.chrome.pem"
         ]
     },
 
     "install": [
         "(cd scripts; ./install_connector.sh)",
-        "echo 'TODO: install browser extensions locally.'"
+        "(cd scripts; ./install_extension.sh)"
     ],
 
     "clean": [
