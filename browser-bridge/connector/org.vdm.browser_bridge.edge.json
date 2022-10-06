@@ -4,6 +4,6 @@
     "path": "/opt/browser-bridge/connector_edge.py",
     "type": "stdio",
     "allowed_origins": [
-        "chrome-extension://kbeahiliifapleakppahedbiekhkddce/"
+        "chrome-extension://imdamogmkblgbhahcmllkhlhadmkcpog/"
     ]
 }

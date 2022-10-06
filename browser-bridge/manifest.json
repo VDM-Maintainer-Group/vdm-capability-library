@@ -1,0 +1,46 @@
+{
+    "name": "browser-bridge",
+    "type": "dbus",
+    "version": "0.1.2",
+
+    "build": {
+        "dependency": {
+            "npm": [],
+            "pip": ["dbus-python", "PyGObject"]
+        },
+        "script": [
+            "(cd extension; npm install)",
+            "(cd extension; npm run init)",
+            "(cd extension; npm run build firefox; npm run sign)",
+            "(cd extension; npm run build chrome; npm run build edge)",
+            "echo 'You need to pack the Chrome/Edge extensions manually.'"
+        ],
+        "output": [
+            "",
+            "./extension/packages/2f7f10ee6d444ae7b168.xpi",
+            "./extension/packages/chrome.crx",
+            "./extension/packages/chrome.pem"
+        ]
+    },
+
+    "install": [
+        "(cd scripts; ./install_connector.sh)",
+        "echo 'TODO: install browser extensions locally.'"
+    ],
+
+    "clean": [
+        "extension/dist", "extension/node_modules", "extension/package-lock.json",
+        "extension/packages/*.zip"
+    ],
+
+    "runtime": {
+        "dependency": {
+            "pip": ["dbus-python", "PyGObject"]
+        },
+        "status": "echo Capable",
+        "enable": [],
+        "disable": []
+    },
+
+    "metadata": {}
+}

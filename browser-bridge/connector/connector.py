@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 import asyncio, threading
-from multiprocessing.connection import wait
 from queue import Queue
 import struct, json, random, string
 from pathlib import Path
 from sys import stdin, stdout
-from time import sleep
 import dbus, dbus.service, dbus.mainloop.glib
 from gi.repository import GLib
 

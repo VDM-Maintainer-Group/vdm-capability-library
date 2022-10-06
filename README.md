@@ -27,6 +27,10 @@ Feel free to *use or contribute* every best practice in this repo.
 
   > provide X11 window and desktop control via `libxcb`.
 
+- [browser-bridge](./browser-bridge)
+
+  > It provides your browser with VDM-Compatibility together with a connector program.
+
 ### Build
 
 ```bash
