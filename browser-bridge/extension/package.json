@@ -10,7 +10,7 @@
     "init": "(cd app/scripts; bower install crypto-js)",
     "dev": "webextension-toolbox dev",
     "build": "webextension-toolbox build",
-    "sign": "web-ext sign --api-key=$npm_package_config_jwt_issuer --api-secret=$npm_package_config_jwt_sign -a packages -s app"
+    "sign": "web-ext sign --api-key=$npm_package_config_jwt_issuer --api-secret=$npm_package_config_jwt_sign -a packages -s dist/firefox"
   },
   "devDependencies": {
     "web-ext": "^7.2.0",
