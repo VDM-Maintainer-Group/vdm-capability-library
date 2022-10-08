@@ -13,7 +13,8 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "browser-bridge@vdm-compatible.org",
-      "strict_min_version": "54.0"
+      "strict_min_version": "54.0",
+      "update_url": "https://example.com/updates.json"
     }
   },
 

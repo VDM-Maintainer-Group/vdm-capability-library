@@ -12,8 +12,7 @@
             "(cd extension; npm install)",
             "(cd extension; npm run init)",
             "(cd extension; npm run build chrome; npm run build edge)",
-            "(cd extension; ../scripts/crxmake.sh dist/chrome packages/chrome.pem)",
-            "(cd extension; npm run build firefox; npm run sign)"
+            "(cd extension; ../scripts/crxmake.sh dist/chrome packages/chrome.pem)"
         ],
         "output": [
             "",
