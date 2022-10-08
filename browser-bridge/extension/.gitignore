@@ -3,4 +3,5 @@ node_modules/
 dist/
 packages/*.zip
 packages/*.crx
+packages/*.xpi
 package-lock.json

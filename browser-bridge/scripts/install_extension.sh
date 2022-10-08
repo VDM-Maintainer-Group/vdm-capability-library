@@ -6,8 +6,10 @@ CRX_ID='phmlhncfebmikfmkfombdjnkjmkpdjdl'
 # for firefox
 FIREFOX_FOLDER='/usr/lib/mozilla/extensions'
 sudo mkdir -p $FIREFOX_FOLDER/{$XPI_ID}
-for x in ../extension/packages/*.xpi; do
-    sudo cp "$x" $FIREFOX_FOLDER/{$XPI_ID}/$XPI_ID.xpi
+for x in ../extension/packages/*.xpi.zip; do
+    cp "$x" "${x%.zip}"
+    firefox-esr "${x%.zip}" & disown
+    break
 done
 
 # for chrome
