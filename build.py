@@ -86,6 +86,16 @@ class SimpleBuildSystem:
         os.environ['LIBRARY_PATH'] = f"{os.getenv('LIBRARY_PATH','')}:{self.install_dir}"
         pass
 
+    def __install_npm(self):
+        try:
+            SHELL_RUN('which npm')
+        except:
+            try:
+                SHELL_RUN('curl -L https://npmjs.org/install.sh | sh')
+            except:
+                raise Exception('npm installation failed.')
+        pass
+
     def __install_cargo(self):
         try:
             SHELL_RUN('which rustup cargo')
@@ -121,9 +131,12 @@ class SimpleBuildSystem:
             if cmd=='cargo':
                 self.__install_cargo()
                 _command = 'cargo install "%s"'
+            elif cmd=='npm':
+                self.__install_npm()
+                _command = 'npm install "%s"'
             elif cmd=='pip':
                 self.__install_pip()
-                _command = 'pip3 install "%s"'
+                _command = 'pip3 install "%s" -y'
             elif cmd=='conan':
                 self.__install_conan()
                 raise Exception('Conan is not supported now.')
