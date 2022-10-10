@@ -11,21 +11,20 @@
         "script": [
             "(cd extension; npm install)",
             "(cd extension; npm run init)",
-            "(cd extension; npm run build firefox; npm run sign)",
             "(cd extension; npm run build chrome; npm run build edge)",
-            "echo 'You need to pack the Chrome/Edge extensions manually.'"
+            "(cd extension; ../scripts/crxmake.sh dist/chrome packages/chrome.pem)",
+            "(cd extension; npm run build firefox)"
         ],
         "output": [
             "",
-            "./extension/packages/2f7f10ee6d444ae7b168.xpi",
-            "./extension/packages/chrome.crx",
-            "./extension/packages/chrome.pem"
+            "./extension/packages/chrome.crx@browser-bridge.chrome.crx",
+            "./extension/packages/chrome.pem@browser-bridge.chrome.pem"
         ]
     },
 
     "install": [
         "(cd scripts; ./install_connector.sh)",
-        "echo 'TODO: install browser extensions locally.'"
+        "(cd scripts; ./install_extension.sh)"
     ],
 
     "clean": [

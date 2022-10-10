@@ -14,11 +14,7 @@
 ### Structure
 - `connector` (connector program and manifest file)
 - `extension` (source code for browser extension)
-
-### Development
-```bash
-sbs dev
-```
+- `scripts` (used for install connector/extension)
 
 ### Build
 ```bash
