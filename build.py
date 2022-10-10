@@ -173,8 +173,8 @@ class SimpleBuildSystem:
         self.__output_files('rm -rf', Path(src_dir), Path(dst_dir), ignore)
         pass
 
-    def _exec_build(self, logger=NoneLogger):
-        for i, cmd in enumerate(self.build_script):
+    def _exec_scripts(self, scripts, logger=NoneLogger):
+        for i, cmd in enumerate(scripts):
             logger.text = self._title%'Building: %s'%cmd
             try:
                 SHELL_RUN(cmd)
@@ -239,6 +239,10 @@ class SimpleBuildSystem:
             self.build_script = manifest['build']['script']
         except:
             self.build_script = list()
+        try:
+            self.install_script = manifest['install']
+        except:
+            self.install_script = list()
         #
         _output = [x.split('@') for x in self.output]
         _output = [(x[0],None) if len(x)==1 else (x[0],x[1]) for x in _output]
@@ -256,7 +260,7 @@ class SimpleBuildSystem:
             self._check_dependency(self.build_dependency, logger)
             #
             logger.text = self._title%'Building ...'
-            self._exec_build(logger)
+            self._exec_scripts(self.build_script, logger)
             #
             logger.text = self._title%'Release output files ...'
             self._copy_files(Path('.'), self.output_dir)
@@ -323,6 +327,9 @@ class SimpleBuildSystem:
             _output = [(x,None) for x in _output]
             self.output = _output
             self._copy_files(self.output_dir, self.install_dir)
+            #
+            logger.text = self._title%'Execute post-install script ...'
+            self._exec_scripts(self.install_script, logger)
             #
             logger.text = self._title%'Installed.'
         except Exception as e:
