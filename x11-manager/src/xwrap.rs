@@ -171,12 +171,12 @@ impl XWrap {
         self.get_window_prop(window, self.atoms.NetWMPid)
     }
 
-    pub fn get_window_frame_extents(&self, window: xlib::Window) -> Option<Vec<i32>> {
+    pub fn get_window_frame_extents(&self, window: xlib::Window) -> Option<Vec<isize>> {
         let (nitems_return, prop_return) = self.get_property(window, self.atoms.NetFrameExtents, xlib::XA_CARDINAL)?;
         unsafe {
             #[allow(clippy::cast_lossless, clippy::cast_ptr_alignment)]
-            let ptr = prop_return as *const i32;
-            let results: &[i32] = slice::from_raw_parts(ptr, nitems_return as usize);
+            let ptr = prop_return as *const isize;
+            let results: &[isize] = slice::from_raw_parts(ptr, nitems_return as usize);
             Some( results.to_vec() )
         }
     }
@@ -271,8 +271,8 @@ impl XWrap {
         }
 
         if let Some(extents) = self.get_window_frame_extents(window) {
-            real_x -= extents[0];
-            real_y -= extents[2];
+            real_x -= extents[0] as i32;
+            real_y -= extents[2] as i32;
         }
 
         Some(Xyhw {
