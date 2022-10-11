@@ -256,7 +256,7 @@ impl XWrap {
             if status == 0 {
                 return None
             }
-
+            //FIXME: wrong translation
             let status = (self.xlib.XTranslateCoordinates)(
                 self.display, window, root_return, x_return, y_return,
                 &mut real_x, &mut real_y, &mut root_return
@@ -274,12 +274,11 @@ impl XWrap {
     }
 
     pub fn set_window_geometry(&self, window: xlib::Window, xyhw: Xyhw) {
-        let mut gravity_flag: u32 = 0x0800;
-        if xyhw.x != 0 { gravity_flag |= 0x0400; }
-        if xyhw.y != 0 { gravity_flag |= 0x0200; }
-        if xyhw.w != 0 { gravity_flag |= 0x0100; }
-        if xyhw.h != 0 { gravity_flag |= 0x0080; }
-        //FIXME: with weird offset
+        let mut gravity_flag: u32 = 0x0000;
+        if xyhw.x != -1 { gravity_flag |= 1<<8; }
+        if xyhw.y != -1 { gravity_flag |= 1<<9; }
+        if xyhw.w != -1 { gravity_flag |= 1<<10; }
+        if xyhw.h != -1 { gravity_flag |= 1<<11; }
         self.set_window_prop(window, self.atoms.NetMoveResizeWindow,
             &[gravity_flag, xyhw.x as u32, xyhw.y as u32, xyhw.w as u32, xyhw.h as u32]);
     }
