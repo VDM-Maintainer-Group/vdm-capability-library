@@ -279,6 +279,7 @@ impl XWrap {
         if xyhw.y != 0 { gravity_flag |= 0x0200; }
         if xyhw.w != 0 { gravity_flag |= 0x0100; }
         if xyhw.h != 0 { gravity_flag |= 0x0080; }
+        //FIXME: with weird offset
         self.set_window_prop(window, self.atoms.NetMoveResizeWindow,
             &[gravity_flag, xyhw.x as u32, xyhw.y as u32, xyhw.w as u32, xyhw.h as u32]);
     }

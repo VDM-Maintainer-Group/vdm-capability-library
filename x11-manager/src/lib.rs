@@ -72,16 +72,16 @@ fn test() {
         CString::from_raw( get_current_desktop(kwargs_1) ).into_string().unwrap()
     } );
 
-    let kwargs:String = r#"{"name":"Visual Studio Code"}"#.into();
+    let kwargs:String = r#"{"name":"lstopo"}"#.into();
     let kwargs = CString::new(kwargs.clone()).unwrap().into_raw();
     let status_str = unsafe {
         CString::from_raw( get_windows_by_name(kwargs) ).into_string().unwrap()
     };
     println!("{}", status_str);
 
-    let mut status: Vec<WindowStatus> = serde_json::from_str(&status_str).unwrap();
-    status[0].xyhw.x += 48;
-    status[0].xyhw.y += 27;
+    let status: Vec<WindowStatus> = serde_json::from_str(&status_str).unwrap();
+    // status[0].xyhw.x += 48;
+    // status[0].xyhw.y += 27;
 
     let kwargs = format!("{{
         \"xid\": {},
