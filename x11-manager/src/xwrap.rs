@@ -256,9 +256,10 @@ impl XWrap {
             if status == 0 {
                 return None
             }
-            //FIXME: wrong translation
+            //FIXME: should be aware of window manager decoration via _NET_FRAME_EXTENTS
+            println!("({}, {})", x_return, y_return);
             let status = (self.xlib.XTranslateCoordinates)(
-                self.display, window, root_return, x_return, y_return,
+                self.display, window, root_return, 0, -37,
                 &mut real_x, &mut real_y, &mut root_return
             );
             if status == 0 {
