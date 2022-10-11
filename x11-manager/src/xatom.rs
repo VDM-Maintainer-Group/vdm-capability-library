@@ -65,6 +65,7 @@ pub struct XAtom {
     pub NetWMStrut: xlib::Atom,        //old version
 
     pub NetMoveResizeWindow: xlib::Atom,
+    pub NetFrameExtents: xlib::Atom,
 
     pub UTF8String: xlib::Atom,
 }
@@ -120,7 +121,8 @@ impl XAtom {
             self.NetWMStrutPartial,
             self.NetWMStrut,
             
-            self.NetMoveResizeWindow
+            self.NetMoveResizeWindow,
+            self.NetFrameExtents,
         ]
     }
     
@@ -176,6 +178,7 @@ impl XAtom {
             a if a == self.NetWMStrut => "_NET_WM_STRUT",
 
             a if a == self.NetMoveResizeWindow => "_NET_MOVERESIZE_WINDOW",
+            a if a == self.NetFrameExtents => "_NET_FRAME_EXTENTS",
 
             a if a == self.UTF8String => "UTF8_STRING",
             _ => "(UNKNOWN)",
@@ -241,6 +244,7 @@ impl XAtom {
             NetWMStrut: from(xlib, dpy, "_NET_WM_STRUT"),
 
             NetMoveResizeWindow: from(xlib, dpy, "_NET_MOVERESIZE_WINDOW"),
+            NetFrameExtents: from(xlib, dpy, "_NET_FRAME_EXTENTS"),
 
             UTF8String: from(xlib, dpy, "UTF8_STRING"),
         }

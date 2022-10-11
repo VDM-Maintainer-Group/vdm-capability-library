@@ -171,6 +171,16 @@ impl XWrap {
         self.get_window_prop(window, self.atoms.NetWMPid)
     }
 
+    pub fn get_window_frame_extents(&self, window: xlib::Window) -> Option<Vec<i32>> {
+        let (nitems_return, prop_return) = self.get_property(window, self.atoms.NetFrameExtents, xlib::XA_CARDINAL)?;
+        unsafe {
+            #[allow(clippy::cast_lossless, clippy::cast_ptr_alignment)]
+            let ptr = prop_return as *const i32;
+            let results: &[i32] = slice::from_raw_parts(ptr, nitems_return as usize);
+            Some( results.to_vec() )
+        }
+    }
+
     pub fn get_client_list(&self, root: Option<xlib::Window>) -> Vec<xlib::Window> {
         let root = root.unwrap_or( self.root );
 
@@ -248,24 +258,23 @@ impl XWrap {
         let mut depth_return: c_uint = 0;
 
         unsafe {
-            let status = (self.xlib.XGetGeometry)(
+            if 0 == (self.xlib.XGetGeometry)(
                 self.display, window,
                 &mut root_return, &mut x_return, &mut y_return, &mut width_return, &mut height_return,
                 &mut border_width_return, &mut depth_return
-            );
-            if status == 0 {
-                return None
-            }
-            //FIXME: should be aware of window manager decoration via _NET_FRAME_EXTENTS
-            println!("({}, {})", x_return, y_return);
-            let status = (self.xlib.XTranslateCoordinates)(
-                self.display, window, root_return, 0, -37,
+            ) { return None }
+
+            if 0 == (self.xlib.XTranslateCoordinates)(
+                self.display, window, root_return, 0, 0,
                 &mut real_x, &mut real_y, &mut root_return
-            );
-            if status == 0 {
-                return None
-            }
+            ) { return None }
         }
+
+        if let Some(extents) = self.get_window_frame_extents(window) {
+            real_x -= extents[0];
+            real_y -= extents[2];
+        }
+
         Some(Xyhw {
             x: real_x,
             y: real_y,
