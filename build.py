@@ -136,7 +136,7 @@ class SimpleBuildSystem:
                 _command = 'npm install "%s"'
             elif cmd=='pip':
                 self.__install_pip()
-                _command = 'pip3 install "%s" -y'
+                _command = 'pip3 install "%s"'
             elif cmd=='conan':
                 self.__install_conan()
                 raise Exception('Conan is not supported now.')
