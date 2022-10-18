@@ -226,7 +226,7 @@ class SimpleBuildSystem:
             self.name = manifest['name']
             self.output = manifest['build']['output']
         except Exception as e:
-            raise Exception('%s section missing in maifest file.'%e)
+            raise Exception('%s section missing in manifest file.'%e)
         #
         try:
             self.build_dependency = manifest['build']['dependency']

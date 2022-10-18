@@ -61,21 +61,26 @@ port.onMessage.addListener((msg) => {
             break;
 
         case 'save':
-            browser.tabs.query({ 'windowId':w_id })
-            .then((tabs) => {
-                let r_tabs = tabs.map((stat) => {return {
-                    'url':stat.url, 'active':stat.active,
-                    // 'title': x.title, 'pinned': x.pinned
-                }});
-                r_tabs = JSON.stringify(r_tabs);
-                encrypt_message(r_tabs, (enc_msg) => {
-                    post_message(w_id, enc_msg)
-                });
-            }, (err) => {
-                console.error(err)
-                post_message(w_id, -1);
-            })
+            browser.windows.get(w_id)
+            .then((window) => {
+                let incognito = window.incognito;
+                browser.tabs.query({ 'windowId':w_id })
+                .then((tabs) => {
+                    let r_tabs = tabs.map((stat) => {return {
+                        'url':stat.url, 'active':stat.active,
+                        // 'title': x.title, 'pinned': x.pinned
+                    }});
+                    let msg = JSON.stringify({ 'incognito':incognito, "tabs":r_tabs });
+                    encrypt_message(msg, (enc_msg) => {
+                        post_message(w_id, enc_msg)
+                    });
+                }, (err) => {
+                    console.error(err)
+                    post_message(w_id, -1);
+                })
+            });
             break;
+        //FIXME: incorrect
         case 'resume':
             browser.tabs.query({'windowId':w_id})
             .then((old_tabs) => {
@@ -99,6 +104,7 @@ port.onMessage.addListener((msg) => {
                 });
             });
             break;
+        //FIXME: incorrect
         case 'new':
             let stat = JSON.parse( msg['stat'] )
             let x,y,h,w = stat['xyhw']
