@@ -16,7 +16,7 @@
             "(cd extension; npm run build firefox)"
         ],
         "output": [
-            "",
+            "entry.py",
             "./extension/packages/chrome.crx@browser-bridge.chrome.crx",
             "./extension/packages/chrome.pem@browser-bridge.chrome.pem"
         ]
