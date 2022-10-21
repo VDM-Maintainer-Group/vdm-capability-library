@@ -141,12 +141,13 @@ class SimpleBuildSystem:
             elif cmd=='conan':
                 self.__install_conan()
                 raise Exception('Conan is not supported now.')
-            elif cmd=='apt':
-                _command = 'sudo apt install "%s"'
             elif cmd=='sbs':
                 _command = '$SBS_EXECUTABLE install "%s"'
+            elif cmd=='apt' and Path('/usr/bin/apt').exists():
+                args = [ ' '.join(args) ]
+                _command = 'pkexec apt install "%s" -y'
             else:
-                return
+                continue
 
             for arg in args:
                 logger.text = self._title%_command%arg
