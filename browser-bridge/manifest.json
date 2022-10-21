@@ -23,8 +23,8 @@
     },
 
     "install": [
-        "(cd scripts; ./install_connector.sh)",
-        "(cd scripts; ./install_extension.sh)"
+        "(cd scripts; pkexec sh $PWD/install_connector.sh)",
+        "(cd scripts; pkexec sh $PWD/install_extension.sh)"
     ],
 
     "clean": [
