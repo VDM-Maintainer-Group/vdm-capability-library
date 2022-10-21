@@ -145,7 +145,7 @@ class SimpleBuildSystem:
                 _command = '$SBS_EXECUTABLE install "%s"'
             elif cmd=='apt' and Path('/usr/bin/apt').exists():
                 args = [ ' '.join(args) ]
-                _command = 'pkexec apt install "%s" -y'
+                _command = 'pkexec apt install %s -y'
             else:
                 continue
 
