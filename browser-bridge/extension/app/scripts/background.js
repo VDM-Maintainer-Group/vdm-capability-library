@@ -80,28 +80,39 @@ function new_window_tabs(stat, callback) {
     });
 }
 
-function replace_window_tabs(stat, callback) {
-    // browser.tabs.query({"windowId":w_id})
-    // .then((old_tabs) => {
-    //     let id_tabs = old_tabs.map( x => x["id"] );
-    //     decrypt_message(msg["stat"], (dec_msg) => {
-    //         // create new tabs
-    //         let r_tabs = JSON.parse(dec_msg);
-    //         r_tabs.map((stat) => {
-    //             browser.tabs.create({
-    //                 "url":stat.url, "active":stat.active
-    //             }).then((_)=>{}, (_)=>{});
-    //         });
-    //         // close old tabs
-    //         browser.tabs.remove(id_tabs)
-    //         .then(() => {
-    //             post_message(w_id, 0);
-    //         }, (err) => {
-    //             console.error(err)
-    //             post_message(w_id, -1);
-    //         });
-    //     });
-    // });
+function replace_window_tabs(w_id, stat, callback) {
+    let incognito = stat["incognito"];
+    let r_tabs = stat["tabs"];
+
+    browser.windows.get(w_id)
+    .then((window) => {
+        if (window.incognito!=incognito) {
+            new_window_tabs(stat, callback);
+            browser.windows.remove(w_id).then(
+                ()=>{}, (_)=>{}
+            );
+        }
+        else {
+            browser.tabs.query({"windowId":w_id})
+            .then((old_tabs) => {
+                let id_tabs = old_tabs.map( x => x["id"] );
+                // create new tabs
+                r_tabs.map((tab) => {
+                    browser.tabs.create({
+                        "url":tab.url, "active":tab.active
+                    }).then((_)=>{}, (_)=>{});
+                });
+                // close old tabs
+                browser.tabs.remove(id_tabs)
+                .then(() => {
+                    callback( 0 );
+                }, (err) => {
+                    console.error(err);
+                    callback( -1 );
+                });
+            })
+        }
+    })
 }
 
 function open_temp(name, callback) {
@@ -139,11 +150,6 @@ let ops = {
 };
 
 // ------------------------------------------------------------- //
-function post_message(w_id, ret) {
-    res = {"w_id":w_id, "res":ret};
-    port.postMessage( res );
-}
-
 let port = browser.runtime.connectNative("org.vdm.browser_bridge");
 
 browser.tabs.onUpdated.addListener(async (tabId) => {
@@ -176,7 +182,7 @@ port.onMessage.addListener((msg) => {
             ops.close(msg["w_id"], post_callback); break;
         case "resume":
             decrypt_message(msg["stat"], (stat) => {
-                ops.resume(stat, post_callback);
+                ops.resume(msg["w_id"], stat, post_callback);
             }); break;
         case "new":
             decrypt_message(msg["stat"], (stat) => {
