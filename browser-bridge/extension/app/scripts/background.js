@@ -69,10 +69,11 @@ function close_window(w_id, callback) {
 function new_window_tabs(stat, callback) {
     let incognito = stat["incognito"];
     let urls = stat["tabs"].map( tab => tab.url );
+    urls = urls.filter( url => !url.startsWith('about:')); //remove special pages
 
     browser.windows.create({
         "incognito":incognito, "url":urls,
-    }, (_) => {
+    }).then((_) => {
         callback( 0 );
     }, (err) => {
         console.error(err);
@@ -87,7 +88,9 @@ function replace_window_tabs(w_id, stat, callback) {
     browser.windows.get(w_id)
     .then((window) => {
         if (window.incognito!=incognito) {
+            // open in new window
             new_window_tabs(stat, callback);
+            // while close the current window
             browser.windows.remove(w_id).then(
                 ()=>{}, (_)=>{}
             );
@@ -102,7 +105,7 @@ function replace_window_tabs(w_id, stat, callback) {
                         "url":tab.url, "active":tab.active
                     }).then((_)=>{}, (_)=>{});
                 });
-                // close old tabs
+                // while close old tabs
                 browser.tabs.remove(id_tabs)
                 .then(() => {
                     callback( 0 );
@@ -142,7 +145,7 @@ let ops = {
     "save": get_all_window_tabs,
     "close": close_window,
 
-    "new": create_window,
+    "new": new_window_tabs,
     "resume": replace_window_tabs,
 
     "open_temp": open_temp,
@@ -182,10 +185,12 @@ port.onMessage.addListener((msg) => {
             ops.close(msg["w_id"], post_callback); break;
         case "resume":
             decrypt_message(msg["stat"], (stat) => {
+                stat = JSON.parse(stat);
                 ops.resume(msg["w_id"], stat, post_callback);
             }); break;
         case "new":
             decrypt_message(msg["stat"], (stat) => {
+                stat = JSON.parse(stat);
                 ops.new(stat, post_callback);
             }); break;
         case "open_temp":
