@@ -29,6 +29,15 @@ async def connect_stdin_stdout():
     writer = asyncio.StreamWriter(w_transport, w_protocol, reader, loop)
     return (reader, writer)
 
+def retry_with_timeout(lamb_fn, timeout=1):
+    import time
+    _now = time.time()
+    ret = lamb_fn()
+    while not ret and time.time()-_now<timeout:
+        ret = lamb_fn()
+        time.sleep(0.1)
+    return ret
+
 class BrowserConnector:
     def __init__(self, reader, writer):
         self.reader = reader
@@ -78,12 +87,14 @@ class BrowserWindowInterface(dbus.service.Object):
         temp_name = f'{self.name}-{self.unique}'
         t_id = self.sync_ctrl({'req':'open_temp', 'w_id':self.w_id, 'name':temp_name})
         try:
-            _window = xm.get_windows_by_name(temp_name)[0]
+            _lamb_fn = lambda: xm.get_windows_by_name(temp_name)
+            _window = retry_with_timeout(_lamb_fn)[0]
             self.xid = _window['xid']
         except:
             self.xid = 0
         finally:
             self.sync_ctrl({'req':'close_temp', 'w_id':self.w_id, 't_id':t_id})
+        logging.info(f'xid update: {self.xid}')
         pass
 
     @dbus.service.method(dbus_interface='org.VDMCompatible.src',
@@ -168,7 +179,8 @@ async def handle_event(browser_name):
         except asyncio.exceptions.TimeoutError:
             pass
         except:
-            logging.error( traceback.format_exc() )
+            # logging.error( traceback.format_exc() )
+            pass
         ## handle events from d-bus (on another thread)
         try:
             req = recv_queue.get_nowait()
