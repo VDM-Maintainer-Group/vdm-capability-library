@@ -10,9 +10,8 @@ from gi.repository import GLib
 from pyvdm.interface import CapabilityLibrary
 xm = CapabilityLibrary.CapabilityHandleLocal('x11-manager')
 
-import logging, traceback
-logging.basicConfig(format='%(asctime)s %(message)s', encoding='utf-8', level=logging.DEBUG,
-    filename='/tmp/browser-bridge.log', filemode='w')
+# import logging, traceback
+# logging.basicConfig(format='%(asctime)s %(message)s', encoding='utf-8', level=logging.DEBUG, filename='/tmp/browser-bridge.log', filemode='w')
 
 FILE_NAME_MAP = {
     'connector_chrome': 'google-chrome',
@@ -94,7 +93,7 @@ class BrowserWindowInterface(dbus.service.Object):
             self.xid = 0
         finally:
             self.sync_ctrl({'req':'close_temp', 'w_id':self.w_id, 't_id':t_id})
-        logging.info(f'xid update: {self.xid}')
+        # logging.info(f'xid update: {self.xid}')
         pass
 
     @dbus.service.method(dbus_interface='org.VDMCompatible.src',
