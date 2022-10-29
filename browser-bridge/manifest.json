@@ -6,7 +6,7 @@
     "build": {
         "dependency": {
             "npm": [],
-            "apt": ["libdbus-1-dev", "libglib2.0-dev", "libcario-dev", "libgirepository1.0-dev"],
+            "apt": ["libdbus-1-dev", "libglib2.0-dev", "libgirepository1.0-dev"],
             "pip": ["dbus-python", "PyGObject"]
         },
         "script": [
