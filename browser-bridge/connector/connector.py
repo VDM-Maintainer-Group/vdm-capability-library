@@ -179,7 +179,7 @@ async def handle_event(browser_name):
             pass
         except:
             # logging.error( traceback.format_exc() )
-            pass
+            exit()
         ## handle events from d-bus (on another thread)
         try:
             req = recv_queue.get_nowait()
