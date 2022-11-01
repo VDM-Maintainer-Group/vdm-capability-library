@@ -18,11 +18,9 @@ done
 # for chrome
 CHROME_FOLDER='/opt/google/chrome/extensions'
 mkdir -p $CHROME_FOLDER/
-cp $ROOT_DIR/extension/packages/chrome.json $CHROME_FOLDER/$CRX_ID.json
-sed -i 's@~@'"$HOME"'@' $CHROME_FOLDER/$CRX_ID.json
+cp $ROOT_DIR/extension/dist/chrome.json $CHROME_FOLDER/$CRX_ID.json
 
 # for edge
 EDGE_FOLDER='/usr/share/microsoft-edge/extensions'
 mkdir -p $EDGE_FOLDER/
-cp $ROOT_DIR/extension/packages/chrome.json $EDGE_FOLDER/$CRX_ID.json
-sed -i 's@~@'"$HOME"'@' $EDGE_FOLDER/$CRX_ID.json
+cp $ROOT_DIR/extension/dist/chrome.json $EDGE_FOLDER/$CRX_ID.json
