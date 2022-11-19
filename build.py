@@ -3,6 +3,7 @@ import os, sys, time, argparse, subprocess as sp
 from pathlib import Path
 import json, yaml, tempfile
 import halo, termcolor
+from getpass import getpass, getuser
 
 DBG = 1
 POSIX = lambda x: x.as_posix()
@@ -74,6 +75,13 @@ class WorkSpace:
 
 class NoneLogger:
     __slots__ = ['text', 'enabled']
+    @staticmethod
+    def start():pass
+    @staticmethod
+    def stop():pass
+    @staticmethod
+    def warn():pass
+    pass
 
 class SimpleBuildSystem:
     def __init__(self):
@@ -86,7 +94,8 @@ class SimpleBuildSystem:
         os.environ['LIBRARY_PATH'] = f"{os.getenv('LIBRARY_PATH','')}:{self.install_dir}"
         pass
 
-    def __install_npm(self):
+    @staticmethod
+    def __install_npm():
         try:
             SHELL_RUN('which npm')
         except:
@@ -97,7 +106,8 @@ class SimpleBuildSystem:
                 raise Exception('npm installation failed.')
         pass
 
-    def __install_cargo(self):
+    @staticmethod
+    def __install_cargo():
         try:
             SHELL_RUN('which rustup cargo')
         except:
@@ -107,7 +117,8 @@ class SimpleBuildSystem:
                 raise Exception('Rustup installation failed.')
         pass
 
-    def __install_pip(self):
+    @staticmethod
+    def __install_pip():
         try:
             SHELL_RUN('which pip3')
         except:
@@ -117,7 +128,8 @@ class SimpleBuildSystem:
                 raise Exception('pip3 installation failed.')
         pass
 
-    def __install_conan(self):
+    @staticmethod
+    def __install_conan():
         try:
             SHELL_RUN('which conan')
         except:
@@ -127,8 +139,21 @@ class SimpleBuildSystem:
                 raise Exception('Conan installation failed.')
         pass
 
+    def execute_with_permission(self, command, with_permission:True, logger=NoneLogger):
+        if with_permission:
+            logger = logger.warn()
+            ##
+            if not hasattr(self, 'password'):
+                self.password = getpass(f'[sbs] password for {getuser()}: ')
+            command = f'echo {self.password} | sudo -S {command}'
+            ##
+            logger.start()
+        sp.run(command, capture_output=True, check=True, shell=True)
+        pass
+
     def _check_dependency(self, dep_map:dict, logger=NoneLogger):
         for cmd,args in dep_map.items():
+            _permission = False
             if cmd=='cargo':
                 self.__install_cargo()
                 _command = 'cargo install "%s"'
@@ -145,13 +170,14 @@ class SimpleBuildSystem:
                 _command = '$SBS_EXECUTABLE install "%s"'
             elif cmd=='apt' and Path('/usr/bin/apt').exists():
                 args = [ ' '.join(args) ]
-                _command = 'pkexec apt install %s -y'
+                _command = 'apt install %s -y'
+                _permission = True
             else:
                 continue
 
             for arg in args:
                 logger.text = self._title%_command%arg
-                SHELL_RUN(_command%arg)
+                self.execute_with_permission(_command%arg, _permission, logger)
         pass
 
     def __output_files(self, cmd:str, src_dir:Path, dst_dir:Path, ignore:bool):
