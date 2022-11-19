@@ -25,10 +25,13 @@
         ]
     },
 
-    "install": [
-        "(cd scripts; pkexec sh $PWD/install_connector.sh)",
-        "(cd scripts; pkexec sh $PWD/install_extension.sh)"
-    ],
+    "install": {
+        "with_permission": true,
+        "script": [
+            "sh -c 'cd scripts; ./install_connector.sh'",
+            "sh -c 'cd scripts; ./install_extension.sh'"
+        ]
+    },
 
     "clean": [
         "extension/dist", "extension/node_modules", "extension/package-lock.json",

@@ -141,13 +141,13 @@ class SimpleBuildSystem:
 
     def execute_with_permission(self, command, with_permission:True, logger=NoneLogger):
         if with_permission:
-            logger = logger.warn()
-            ##
             if not hasattr(self, 'password'):
+                logger = logger.warn()
+                ##
                 self.password = getpass(f'[sbs] password for {getuser()}: ')
-            command = f'echo {self.password} | sudo -S {command}'
-            ##
-            logger.start()
+                ##
+                logger.start()
+            command = f'echo {self.password} | sudo -kS {command}'
         sp.run(command, capture_output=True, check=True, shell=True)
         pass
 
@@ -201,11 +201,11 @@ class SimpleBuildSystem:
         self.__output_files('rm -rf', Path(src_dir), Path(dst_dir), ignore)
         pass
 
-    def _exec_scripts(self, scripts, logger=NoneLogger):
+    def _exec_scripts(self, scripts, logger=NoneLogger, with_permission=False):
         for i, cmd in enumerate(scripts):
             logger.text = self._title%'Building: %s'%cmd
             try:
-                SHELL_RUN(cmd)
+                self.execute_with_permission(cmd, with_permission, logger)
             except Exception as e:
                 if isinstance(e, sp.CalledProcessError):
                     msg = e.stderr.decode().lstrip('/bin/sh: 1: ').rstrip()
@@ -268,8 +268,10 @@ class SimpleBuildSystem:
         except:
             self.build_script = list()
         try:
-            self.install_script = manifest['install']
+            self.install_with_permission = manifest['install']['with_permission']
+            self.install_script = manifest['install']['script']
         except:
+            self.install_with_permission = False
             self.install_script = list()
         #
         _output = [x.split('@') for x in self.output]
@@ -357,7 +359,7 @@ class SimpleBuildSystem:
             self._copy_files(self.output_dir, self.install_dir)
             #
             logger.text = self._title%'Execute post-install script ...'
-            self._exec_scripts(self.install_script, logger)
+            self._exec_scripts(self.install_script, logger, self.install_with_permission)
             #
             logger.text = self._title%'Installed.'
         except Exception as e:
