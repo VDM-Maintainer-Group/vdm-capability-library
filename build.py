@@ -143,11 +143,9 @@ class SimpleBuildSystem:
         if with_permission:
             if not hasattr(self, 'password'):
                 logger = logger.warn()
-                ##
                 self.password = getpass(f'[sbs] password for {getuser()}: ')
-                ##
                 logger.start()
-            command = f'echo {self.password} | sudo -kS {command}'
+            command = f'echo {self.password} | sudo -kS sh -c "{command}"'
         sp.run(command, capture_output=True, check=True, shell=True)
         pass
 

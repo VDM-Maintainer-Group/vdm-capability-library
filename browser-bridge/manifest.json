@@ -28,8 +28,8 @@
     "install": {
         "with_permission": true,
         "script": [
-            "sh -c 'cd scripts; ./install_connector.sh'",
-            "sh -c 'cd scripts; ./install_extension.sh'"
+            "cd scripts; ./install_connector.sh",
+            "cd scripts; ./install_extension.sh"
         ]
     },
 
