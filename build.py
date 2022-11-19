@@ -201,7 +201,7 @@ class SimpleBuildSystem:
 
     def _exec_scripts(self, scripts, logger=NoneLogger, with_permission=False):
         for i, cmd in enumerate(scripts):
-            logger.text = self._title%'Building: %s'%cmd
+            logger.text = self._title%'Execute: %s'%cmd
             try:
                 self.execute_with_permission(cmd, with_permission, logger)
             except Exception as e:
@@ -334,7 +334,7 @@ class SimpleBuildSystem:
             # check build outputs
             logger.text = self._title%'Check building results ...'
             try:
-                self._copy_files(Path('output'), self.output_dir)
+                self._copy_files(Path('.'), self.output_dir)
             except:
                 if logger.enabled:
                     self.build(logger)
