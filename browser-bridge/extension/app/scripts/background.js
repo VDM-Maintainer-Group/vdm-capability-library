@@ -102,7 +102,7 @@ function replace_window_tabs(w_id, stat, callback) {
                 // create new tabs
                 r_tabs.map((tab) => {
                     browser.tabs.create({
-                        "url":tab.url, "active":tab.active
+                        "windowId":w_id, "url":tab.url, "active":tab.active
                     }).then((_)=>{}, (_)=>{});
                 });
                 // while close old tabs
@@ -123,7 +123,6 @@ function open_temp(w_id, name, callback) {
         "windowId":w_id, "active":true, "url":`/pages/transition.html?${name}`
     })
     .then((tab) => {
-        console.log(w_id)
         callback( tab.id );
     }, (err) => {
         console.error(err);
