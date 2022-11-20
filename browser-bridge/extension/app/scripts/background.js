@@ -118,11 +118,12 @@ function replace_window_tabs(w_id, stat, callback) {
     })
 }
 
-function open_temp(name, callback) {
+function open_temp(w_id, name, callback) {
     browser.tabs.create({
-        "active":true, "url":`/pages/transition.html?${name}`
+        "windowId":w_id, "active":true, "url":`/pages/transition.html?${name}`
     })
     .then((tab) => {
+        console.log(w_id)
         callback( tab.id );
     }, (err) => {
         console.error(err);
@@ -194,7 +195,7 @@ port.onMessage.addListener((msg) => {
                 ops.new(stat, post_callback);
             }); break;
         case "open_temp":
-            ops.open_temp(msg["name"], post_callback); break;
+            ops.open_temp(msg["w_id"], msg["name"], post_callback); break;
         case "close_temp":
             ops.close_temp(msg["t_id"], post_callback); break;
     }
