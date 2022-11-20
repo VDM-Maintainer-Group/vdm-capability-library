@@ -83,6 +83,9 @@ class BrowserWindowInterface(dbus.service.Object):
         return ret
 
     def set_xid(self):
+        if hasattr(self, 'xid') and self.xid:
+            return
+        #
         temp_name = f'{self.name}-{self.unique}'
         t_id = self.sync_ctrl({'req':'open_temp', 'w_id':self.w_id, 'name':temp_name})
         try:
@@ -100,8 +103,7 @@ class BrowserWindowInterface(dbus.service.Object):
                         out_signature='s')
     def Save(self) -> str:
         ret = self.sync_ctrl({'req':'save', 'w_id':self.w_id})
-        if not self.xid:
-            self.set_xid()
+        self.set_xid()
         return ret
     
     @dbus.service.method(dbus_interface='org.VDMCompatible.src',
