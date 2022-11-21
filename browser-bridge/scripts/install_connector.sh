@@ -27,3 +27,8 @@ ln -sf /opt/browser-bridge/connector.py /opt/browser-bridge/connector_edge.py
 # cp $ROOT_DIR/connector/org.vdm.browser_bridge.edge.json ~/.config/microsoft-edge/NativeMessagingHosts/org.vdm.browser_bridge.json
 mkdir -p /etc/opt/edge/native-messaging-hosts
 cp $ROOT_DIR/connector/org.vdm.browser_bridge.edge.json /etc/opt/edge/native-messaging-hosts/org.vdm.browser_bridge.json
+
+# for deepin browser
+ln -sf /opt/browser-bridge/connector.py /opt/browser-bridge/connector_deepin.py
+mkdir -p /etc/browser/native-messaging-hosts
+cp $ROOT_DIR/connector/org.vdm.browser_bridge.deepin.json /etc/browser/native-messaging-hosts/org.vdm.browser_bridge.json

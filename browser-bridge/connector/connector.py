@@ -17,6 +17,7 @@ FILE_NAME_MAP = {
     'connector_chrome': 'google-chrome',
     'connector_firefox': 'firefox-esr',
     'connector_edge': 'microsoft-edge',
+    'connector_deepin': 'org.deepin.browser.desktop',
 }
 
 async def connect_stdin_stdout():

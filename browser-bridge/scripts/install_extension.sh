@@ -24,3 +24,8 @@ cp $ROOT_DIR/extension/dist/chrome.json $CHROME_FOLDER/$CRX_ID.json
 EDGE_FOLDER='/usr/share/microsoft-edge/extensions'
 mkdir -p $EDGE_FOLDER/
 cp $ROOT_DIR/extension/dist/chrome.json $EDGE_FOLDER/$CRX_ID.json
+
+# for deepin-browser
+DEEPIN_FOLDER='/usr/share/browser/extensions'
+mkdir -p $DEEPIN_FOLDER/
+cp $ROOT_DIR/extension/dist/chrome.json $DEEPIN_FOLDER/$CRX_ID.json
