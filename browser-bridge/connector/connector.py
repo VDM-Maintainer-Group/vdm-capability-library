@@ -177,7 +177,7 @@ async def handle_event(browser_name):
                     pass
             else:
                 ifaces[ w_id ]['tx_q'].put( res['res'] )
-        except asyncio.exceptions.TimeoutError:
+        except asyncio.TimeoutError:
             pass
         except:
             # logging.error( traceback.format_exc() )
