@@ -107,9 +107,12 @@ class SimpleBuildSystem:
         except:
             try:
                 SHELL_RUN('curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash')
-                SHELL_RUN('source $HOME/.nvm/nvm.sh && nvm install --lts')
+                SHELL_RUN('. $HOME/.nvm/nvm.sh && nvm install --lts')
             except:
                 raise Exception('npm installation failed.')
+            else:
+                _source = termcolor.colored('. $HOME/.nvm/nvm.sh', 'green')
+                raise Exception(f'Complete npm installation by: {_source}')
         pass
 
     @staticmethod
@@ -172,7 +175,7 @@ class SimpleBuildSystem:
                 _command = 'cargo install "%s"'
             elif cmd=='npm':
                 self.__install_npm()
-                _command = 'npm install "%s"'
+                _command = '$NPM install "%s"'
             elif cmd=='pip':
                 self.__install_pip()
                 _command = 'pip3 install "%s"'
