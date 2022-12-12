@@ -2,6 +2,7 @@
     "name": "browser-bridge",
     "type": "dbus",
     "version": "0.1.2",
+    "manifest_version": "v1",
 
     "build": {
         "dependency": {

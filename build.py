@@ -6,6 +6,7 @@ import halo, termcolor
 from getpass import getpass, getuser
 
 DBG = 1
+COMPAT = ['v1']
 POSIX = lambda x: x.as_posix()
 SHELL_RUN = lambda x: sp.run(x, capture_output=True, check=True, shell=True)
 
@@ -263,11 +264,21 @@ class SimpleBuildSystem:
     def load_manifest(self):
         with open(Path('./manifest.json')) as fd:
             manifest = json.load( fd )
+        # 
         try:
             self.name = manifest['name']
             self.output = manifest['build']['output']
         except Exception as e:
             raise Exception('%s section missing in manifest file.'%e)
+        # check manifest compatibility
+        try:
+            compat = manifest['manifest_version']
+        except:
+            compat = 'v1'
+        try:
+            assert( compat in COMPAT )
+        except:
+            raise Exception(f'[{self.name}] Manifest version {compat} not supported.')
         #
         try:
             self.build_dependency = manifest['build']['dependency']
