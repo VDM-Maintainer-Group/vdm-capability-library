@@ -15,6 +15,8 @@ INSTALL_DIRECTORY = os.getenv('VDM_CAPABILITY_INSTALL_DIRECTORY',
                         POSIX( Path('~/.vdm/capability').expanduser() ))
 if os.getenv('SBS_EXECUTABLE') is None:
     os.environ['SBS_EXECUTABLE'] = POSIX( Path(__file__).resolve() )
+    os.environ['VDM_CAPABILITY_OUTPUT_DIRECTORY'] = OUTPUT_DIRECTORY
+    os.environ['VDM_CAPABILITY_INSTALL_DIRECTORY'] = INSTALL_DIRECTORY
 
 class TypeWriter:
     def __init__(self):
@@ -80,11 +82,14 @@ class NoneLogger:
     @staticmethod
     def stop():pass
     @staticmethod
+    def info():pass
+    @staticmethod
     def warn():pass
     pass
 
 class SimpleBuildSystem:
-    def __init__(self):
+    def __init__(self, prefix=''):
+        self.prefix = prefix
         self.output_dir = Path(OUTPUT_DIRECTORY)
         self.install_dir = Path(INSTALL_DIRECTORY)
 
@@ -141,12 +146,21 @@ class SimpleBuildSystem:
 
     def execute_with_permission(self, command, with_permission:True, logger=NoneLogger):
         if with_permission:
+            logger = logger.warn()
             if not hasattr(self, 'password'):
-                logger = logger.warn()
                 self.password = getpass(f'[sbs] password for {getuser()}: ')
-                logger.start()
+            logger.start()
             command = f'echo {self.password} | sudo -kS sh -c "{command}"'
         sp.run(command, capture_output=True, check=True, shell=True)
+        pass
+
+    def execute_sbs(self, command, args, logger=NoneLogger):
+        logger = logger.info()
+        enable_halo = not (logger==NoneLogger)
+        sbs_entry(command, args, False, enable_halo, prefix=self._title%'')
+        # for arg in args:
+        #     sp.run(f'$SBS_EXECUTABLE {command} {arg}', check=True, shell=True)
+        logger.start()
         pass
 
     def _check_dependency(self, dep_map:dict, logger=NoneLogger):
@@ -164,12 +178,14 @@ class SimpleBuildSystem:
             elif cmd=='conan':
                 self.__install_conan()
                 raise Exception('Conan is not supported now.')
-            elif cmd=='sbs':
-                _command = '$SBS_EXECUTABLE install "%s"'
             elif cmd=='apt' and Path('/usr/bin/apt').exists():
                 args = [ ' '.join(args) ]
                 _command = 'apt install %s -y'
                 _permission = True
+            elif cmd=='sbs':
+                logger.text = self._title%'Install Capability dependency ...'
+                self.execute_sbs('install', args, logger)
+                continue
             else:
                 continue
 
@@ -279,10 +295,10 @@ class SimpleBuildSystem:
 
 
     def build(self, logger=NoneLogger):
-        self._title = '[build] %s'
+        self._title = f'{self.prefix}[build] %s'
         try:
             self.load_manifest()
-            self._title = '[%s] %s'%(self.name, '%s')
+            self._title = f'{self.prefix}[%s] %s'%(self.name, '%s')
             #
             logger.text = self._title%'Check build dependency ...'
             self._check_dependency(self.build_dependency, logger)
@@ -300,10 +316,10 @@ class SimpleBuildSystem:
         pass
 
     def clean(self, logger=NoneLogger):
-        self._title = '[clean] %s'
+        self._title = f'{self.prefix}[clean] %s'
         try:
             _manifest = self.load_manifest()
-            self._title = '[%s] %s'%(self.name, '%s')
+            self._title = f'{self.prefix}[%s] %s'%(self.name, '%s')
             #
             _output = [x[1] if x[1] else x[0] for x in self.output]
             _output.append( POSIX(Path(self.name)/'.conf') )
@@ -327,10 +343,10 @@ class SimpleBuildSystem:
         pass
 
     def install(self, logger=NoneLogger):
-        self._title = '[install] %s'
+        self._title = f'{self.prefix}[install] %s'
         try:
             manifest = self.load_manifest()
-            self._title = '[%s] %s'%(self.name, '%s')
+            self._title = f'{self.prefix}[%s] %s'%(self.name, '%s')
             # check build outputs
             logger.text = self._title%'Check building results ...'
             try:
@@ -366,10 +382,10 @@ class SimpleBuildSystem:
         pass
 
     def uninstall(self, logger=NoneLogger):
-        self._title = '[uninstall] %s'
+        self._title = f'{self.prefix}[uninstall] %s'
         try:
             _manifest = self.load_config_file()
-            self._title = '[%s] %s'%(self.name, '%s')
+            self._title = f'{self.prefix}[%s] %s'%(self.name, '%s')
             #
             logger.text = self._title%'Uninstalling ...'
             _output = [POSIX( Path('..', x[1] if x[1] else x[0]) ) for x in self.output]
@@ -387,10 +403,10 @@ class SimpleBuildSystem:
         pass
 
     def test(self, logger=NoneLogger):
-        self._title = '[test] %s'
+        self._title = f'{self.prefix}[test] %s'
         try:
             self.load_manifest()
-            self._title = '[%s] %s'%(self.name, '%s')
+            self._title = f'{self.prefix}[%s] %s'%(self.name, '%s')
             # check build outputs
             logger.text = self._title%'Check building results ...'
             try:
@@ -415,7 +431,7 @@ def display_logo():
         tw.write([''], duration=100)
     pass
 
-def validate_work_dirs(command:str, work_dirs:list):
+def validate_work_dirs(command:str, work_dirs:list) -> list:
     if command=='uninstall':
         examiner = lambda _path: _path.is_dir() and (_path/'.conf').exists()
         work_dirs = [Path(INSTALL_DIRECTORY)/Path(_dir) for _dir in work_dirs]
@@ -449,7 +465,7 @@ def apply(executor, work_dirs, enable_halo=False):
     
     return ret
 
-def execute(sbs:SimpleBuildSystem, command:str, work_dirs, logo_show_flag, enable_halo):
+def execute(sbs:SimpleBuildSystem, command:str, work_dirs:list, logo_show_flag:bool, enable_halo:bool):
     assert( isinstance(sbs, SimpleBuildSystem) )
     if len(work_dirs)==0:
         return None
@@ -470,10 +486,15 @@ def execute(sbs:SimpleBuildSystem, command:str, work_dirs, logo_show_flag, enabl
         return None
     pass
 
-def sbs_entry(command, work_dirs, logo_show_flag=False, enable_halo=False):
-    sbs = SimpleBuildSystem()
+def sbs_entry(command, work_dirs, logo_show_flag=False, enable_halo=False, prefix=''):
+    os.environ['SBS_NESTED_LAYER'] = str( int(os.getenv('SBS_NESTED_LAYER',-1)) + 1 )
+    ##
+    sbs = SimpleBuildSystem(prefix)
     work_dirs = validate_work_dirs(command, work_dirs)
-    return execute(sbs, command, work_dirs, logo_show_flag, enable_halo)
+    ret = execute(sbs, command, work_dirs, logo_show_flag, enable_halo)
+    ##
+    os.environ['SBS_NESTED_LAYER'] = str( int(os.getenv('SBS_NESTED_LAYER',0)) - 1 )
+    return ret
 
 def init_subparsers(subparsers):
     p_build = subparsers.add_parser('build')

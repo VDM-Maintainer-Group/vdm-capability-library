@@ -39,6 +39,7 @@
 
     "runtime": {
         "dependency": {
+            "sbs": ["../x11-manager"],
             "pip": ["dbus-python", "PyGObject"]
         },
         "status": "echo Capable",
