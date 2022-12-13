@@ -264,10 +264,17 @@ class SimpleBuildSystem:
         self.output = [(_file,None) for _file in config['files']]
         pass
 
+    def load_multipart(self, path):
+        path = Path(path).absolute()
+        assert( path.is_relative_to('.') )
+        with open(path) as fd:
+            return json.load(fd)
+        pass
+
     def load_manifest(self):
         with open(Path('./manifest.json')) as fd:
             manifest = json.load( fd )
-        # 
+        ## load basic sections: 'name', 'build.output'
         try:
             self.name = manifest['name']
             self.output = manifest['build']['output']
@@ -282,7 +289,11 @@ class SimpleBuildSystem:
             assert( compat in COMPAT )
         except:
             raise Exception(f'[{self.name}] Manifest version {compat} not supported.')
-        #
+        ## load multipart manifest file
+        for key in ['build', 'clean', 'install', 'uninstall', 'test']:
+            if key in manifest and type(manifest[key])==str:
+                manifest[key] = self.load_multipart(manifest[key])
+        ## check build procedure
         try:
             self.build_dependency = manifest['build']['dependency']
         except:
@@ -301,7 +312,7 @@ class SimpleBuildSystem:
         except:
             self.install_with_permission = False
             self.install_script = list()
-        #
+        ## prepare output list
         _output = [x.split('@') for x in self.output]
         _output = [(x[0],None) if len(x)==1 else (x[0],x[1]) for x in _output]
         self.output = _output
