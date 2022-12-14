@@ -290,7 +290,7 @@ class SimpleBuildSystem:
         except:
             raise Exception(f'[{self.name}] Manifest version {compat} not supported.')
         ## load multipart manifest file
-        for key in ['build', 'clean', 'install', 'uninstall', 'test']:
+        for key in ['build', 'clean', 'install', 'runtime', 'metadata', 'test']:
             if key in manifest and type(manifest[key])==str:
                 manifest[key] = self.load_multipart(manifest[key])
         ## check build procedure
