@@ -42,5 +42,18 @@
         "disable": ["browser-bridge-manager disable *"]
     },
 
-    "metadata": {}
+    "metadata": {
+        "enable": {
+            "restype": "String",
+            "args": [{"browsers":"Array<String>"}]
+        },
+        "disable": {
+            "restype": "String",
+            "args": [{"browsers":"Array<String>"}]
+        },
+        "status": {
+            "restype": "String",
+            "args": [{"browsers":"Array<String>"}]
+        }
+    }
 }

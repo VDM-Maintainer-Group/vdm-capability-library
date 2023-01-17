@@ -169,7 +169,7 @@ def status(browsers:list):
         browsers = SUPPORT
     status = [ __check(x) for x in browsers ]
     if True in status:
-        return True
+        return ''
     else:
         raise Exception('Not installed.')
     pass
