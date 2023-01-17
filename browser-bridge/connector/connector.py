@@ -13,13 +13,6 @@ xm = CapabilityLibrary.CapabilityHandleLocal('x11-manager')
 # import logging, traceback
 # logging.basicConfig(format='%(asctime)s %(message)s', encoding='utf-8', level=logging.DEBUG, filename='/tmp/browser-bridge.log', filemode='w')
 
-FILE_NAME_MAP = {
-    'connector_chrome': 'google-chrome',
-    'connector_firefox': 'firefox-esr',
-    'connector_edge': 'microsoft-edge',
-    'connector_deepin': 'org.deepin.browser.desktop',
-}
-
 async def connect_stdin_stdout():
     loop = asyncio.get_event_loop()
     reader = asyncio.StreamReader()
@@ -195,7 +188,7 @@ async def handle_event(browser_name):
 
 def main():
     try:
-        browser_name = FILE_NAME_MAP[ Path(__file__).stem ]
+        browser_name = Path(__file__).stem[ len('connector_'): ]
     except:
         browser_name = 'test'
     threading.Thread(target=start_glib_thread, daemon=True, args=()).start()

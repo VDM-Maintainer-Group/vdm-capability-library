@@ -15,22 +15,16 @@
             "(cd extension; npm run init)",
             "(cd extension; npm run build chrome; npm run build edge)",
             "(cd extension; ../scripts/crxmake.sh dist/chrome packages/chrome.pem)",
-            "(cd extension; npm run build firefox)",
-
-            "(cd extension; cp ./packages/chrome.json ./dist/chrome.json; sed -i 's@~@'\"$HOME\"'@' ./dist/chrome.json)"
+            "(cd extension; npm run build firefox)"
         ],
         "output": [
-            "entry.py",
-            "./extension/packages/chrome.crx@browser-bridge.chrome.crx",
-            "./extension/packages/chrome.pem@browser-bridge.chrome.pem"
-        ]
-    },
+            "manager.py@browser-bridge-manager",
 
-    "install": {
-        "with_permission": true,
-        "script": [
-            "(cd scripts; ./install_connector.sh)",
-            "(cd scripts; ./install_extension.sh)"
+            "./connector@browser-bridge-connector",
+            
+            "./extension/packages/*.xpi.zip@browser-bridge-extensions/",
+            "./extension/packages/chrome.crx@browser-bridge-extensions/",
+            "./extension/packages/chrome.pem@browser-bridge-extensions/"
         ]
     },
 
@@ -43,9 +37,9 @@
             "sbs": ["../x11-manager"],
             "pip": ["dbus-python", "PyGObject"]
         },
-        "status": "echo Capable",
-        "enable": [],
-        "disable": []
+        "status": "browser-bridge-manager status *",
+        "enable":  ["browser-bridge-manager enable *"],
+        "disable": ["browser-bridge-manager disable *"]
     },
 
     "metadata": {}
