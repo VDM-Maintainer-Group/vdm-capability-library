@@ -14,6 +14,7 @@ pub fn get_number_of_desktops() -> i32 {
     }
 }
 
+#[no_mangle]#[jsonify]
 pub fn set_number_of_desktops(num: u32) {
     XWrap::new().set_number_of_desktops(num);
 }
@@ -26,6 +27,7 @@ pub fn get_current_desktop() -> i32 {
     }
 }
 
+#[no_mangle]#[jsonify]
 pub fn set_current_desktop(idx: u32) {
     XWrap::new().set_current_desktop(idx);
 }

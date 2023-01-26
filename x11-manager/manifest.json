@@ -31,9 +31,18 @@
             "restype": "Number",
             "args": []
         },
+        "set_number_of_desktops": {
+            "restype": "Number",
+            "args": [{"num":"Number"}]
+        },
+
         "get_current_desktop": {
             "restype": "Number",
             "args": []
+        },
+        "set_current_desktop": {
+            "restype": "Number",
+            "args": [{"idx":"Number"}]
         },
 
         "get_windows_by_name": {
