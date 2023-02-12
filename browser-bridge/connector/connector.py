@@ -7,6 +7,7 @@ from sys import stdin, stdout
 import dbus, dbus.service, dbus.mainloop.glib
 from gi.repository import GLib
 
+from pyvdm.core.utils import retry_with_timeout
 from pyvdm.interface import CapabilityLibrary
 xm = CapabilityLibrary.CapabilityHandleLocal('x11-manager')
 
@@ -21,15 +22,6 @@ async def connect_stdin_stdout():
     w_transport, w_protocol = await loop.connect_write_pipe(asyncio.streams.FlowControlMixin, stdout)
     writer = asyncio.StreamWriter(w_transport, w_protocol, reader, loop)
     return (reader, writer)
-
-def retry_with_timeout(lamb_fn, timeout=1):
-    import time
-    _now = time.time()
-    ret = lamb_fn()
-    while not ret and time.time()-_now<timeout:
-        ret = lamb_fn()
-        time.sleep(0.1)
-    return ret
 
 class BrowserConnector:
     def __init__(self, reader, writer):
