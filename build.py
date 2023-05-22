@@ -106,8 +106,8 @@ class SimpleBuildSystem:
             SHELL_RUN('which npm')
         except:
             try:
-                SHELL_RUN('curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash')
-                SHELL_RUN('. $HOME/.nvm/nvm.sh && nvm install --lts')
+                SHELL_RUN('curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash')
+                SHELL_RUN('. $HOME/.nvm/nvm.sh && nvm install --lts=gallium')
             except:
                 raise Exception('npm installation failed.')
             else:
