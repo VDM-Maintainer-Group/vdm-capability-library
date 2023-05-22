@@ -205,7 +205,7 @@ class SimpleBuildSystem:
                 _dst_path.parent.mkdir(parents=True, exist_ok=True)
                 src_path = src_dir / src_file
                 dst_path = _dst_path if dst_file else _dst_path.parent
-                SHELL_RUN( f'{cmd} {POSIX(src_path.resolve())} {POSIX(dst_path.resolve())}' )
+                SHELL_RUN( f'{cmd} {POSIX(src_path.resolve())} {POSIX(dst_path.resolve()).rstrip("*")}' )
             except Exception as e:
                 if not ignore: raise e
         pass

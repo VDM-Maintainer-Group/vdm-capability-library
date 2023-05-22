@@ -22,9 +22,9 @@
 
             "./connector@browser-bridge-connector",
             
-            "./extension/packages/*.xpi.zip@browser-bridge-extensions/",
-            "./extension/packages/chrome.crx@browser-bridge-extensions/",
-            "./extension/packages/chrome.pem@browser-bridge-extensions/"
+            "./extension/packages/*.xpi.zip@browser-bridge-extensions/*",
+            "./extension/packages/chrome.crx@browser-bridge-extensions/*",
+            "./extension/packages/chrome.pem@browser-bridge-extensions/*"
         ]
     },
 
