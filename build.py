@@ -83,9 +83,11 @@ class NoneLogger:
     @staticmethod
     def stop():pass
     @staticmethod
-    def info():pass
+    def info(): return NoneLogger()
     @staticmethod
-    def warn():pass
+    def warn(): return NoneLogger()
+    @staticmethod
+    def succeed(): return NoneLogger()
     pass
 
 class SimpleBuildSystem:
@@ -148,7 +150,7 @@ class SimpleBuildSystem:
                 raise Exception('Conan installation failed.')
         pass
 
-    def execute_with_permission(self, command, with_permission:True, logger=NoneLogger):
+    def execute_with_permission(self, command, with_permission=True, logger=NoneLogger):
         if with_permission:
             logger = logger.warn()
             if not hasattr(self, 'password'):
@@ -201,9 +203,9 @@ class SimpleBuildSystem:
     def __output_files(self, cmd:str, src_dir:Path, dst_dir:Path, ignore:bool):
         for src_file,dst_file in self.output:
             try:
-                _dst_path = dst_dir/(dst_file if dst_file else src_file)
+                _dst_path = dst_dir/(dst_file if dst_file else src_file) # type: ignore
                 _dst_path.parent.mkdir(parents=True, exist_ok=True)
-                src_path = src_dir / src_file
+                src_path = src_dir / src_file # type: ignore
                 dst_path = _dst_path if dst_file else _dst_path.parent
                 SHELL_RUN( f'{cmd} {POSIX(src_path.resolve())} {POSIX(dst_path.resolve()).rstrip("*")}' )
             except Exception as e:
@@ -238,7 +240,7 @@ class SimpleBuildSystem:
         _output = [ x[1] if x[1] else x[0] for x in self.output ]
         #
         cfg = {
-            'entry':Path(_output[0]).name, 'files': _output,
+            'entry':Path(_output[0]).name, 'files': _output, # type: ignore
             'runtime': manifest['runtime'],
             'metadata': {
                 'name':manifest['name'], 'class':manifest['type'], 'version':manifest['version'],
@@ -413,7 +415,7 @@ class SimpleBuildSystem:
             self._title = f'{self.prefix}[%s] %s'%(self.name, '%s')
             #
             logger.text = self._title%'Uninstalling ...'
-            _output = [POSIX( Path('..', x[1] if x[1] else x[0]) ) for x in self.output]
+            _output = [POSIX( Path('..', x[1] if x[1] else x[0]) ) for x in self.output] # type: ignore
             _output.append('.conf')
             _output = [(x,None) for x in _output]
             self.output = _output
@@ -555,7 +557,7 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as e:
-        raise e if DBG else ''
+        if DBG: raise e
     finally:
         '' if DBG else exit()
     pass
