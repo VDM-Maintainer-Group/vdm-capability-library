@@ -151,13 +151,19 @@ class SimpleBuildSystem:
         pass
 
     def execute_with_permission(self, command, with_permission=True, logger=NoneLogger):
-        if with_permission:
+        if with_permission and not os.geteuid()==0:
             logger = logger.warn()
             if not hasattr(self, 'password'):
                 self.password = getpass(f'[sbs] password for {getuser()}: ')
             logger.start()
-            command = f'echo {self.password} | sudo -kS sh -c "{command}"'
-        sp.run(command, capture_output=True, check=True, shell=True)
+            _command = f'echo {self.password} | sudo -kS sh -c "{command}"'
+        else:
+            _command = command
+        ##
+        try:
+            sp.run(_command, capture_output=True, check=True, shell=True)
+        except Exception:
+            raise Exception(f'\nFailed to execute command: {command}.')
         pass
 
     def execute_sbs(self, command, args, logger=NoneLogger):
@@ -177,7 +183,7 @@ class SimpleBuildSystem:
                 _command = 'cargo install "%s"'
             elif cmd=='npm':
                 self.__install_npm()
-                _command = '$NPM install "%s"'
+                _command = 'npm install "%s"'
             elif cmd=='pip':
                 self.__install_pip()
                 _command = 'pip3 install "%s"'
@@ -186,7 +192,7 @@ class SimpleBuildSystem:
                 raise Exception('Conan is not supported now.')
             elif cmd=='apt' and Path('/usr/bin/apt').exists():
                 args = [ ' '.join(args) ]
-                _command = 'apt install %s -y'
+                _command = 'apt install -y %s'
                 _permission = True
             elif cmd=='sbs':
                 logger.text = self._title%'Install Capability dependency ...'
@@ -223,9 +229,14 @@ class SimpleBuildSystem:
 
     def _exec_scripts(self, scripts, logger=NoneLogger, with_permission=False):
         for i, cmd in enumerate(scripts):
-            logger.text = self._title%'Execute: %s'%cmd
+            logger.text = self._title%'Execute: %s'%(cmd.replace('\n','\\n'))
             try:
-                self.execute_with_permission(cmd, with_permission, logger)
+                if cmd.startswith('sudo'):
+                    cmd = cmd[4:].lstrip()
+                    cmd_check = True
+                else:
+                    cmd_check = False
+                self.execute_with_permission(cmd, cmd_check or with_permission, logger)
             except Exception as e:
                 if isinstance(e, sp.CalledProcessError):
                     msg = e.stderr.decode().lstrip('/bin/sh: 1: ').rstrip()

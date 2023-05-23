@@ -5,17 +5,26 @@
     
     "build": {
         "dependency": {
+            "apt": ["linux-headers-`uname -r`", "linux-modules-extra-`uname -r`", "openssl", "mokutil"],
             "cargo": [],
             "pip": ["cmake", "maturin"]
         },
         "script": [
-            "cargo build --release",
             "mkdir -p build && cd build && cmake .. && make",
+
+            "sudo mokutil --delete build/inotify_hook.der 2> /dev/null",
+            "cd build; openssl req -new -x509 -newkey rsa:2048 -keyout inotify_hook.priv -outform DER -out inotify_hook.der -nodes -days 36500 -subj \"/CN=inotify_hook/\"",
+            "sudo echo 'inotify_hook\ninotify_hook' | mokutil --import build/inotify_hook.der",
+            "sudo /usr/src/linux-headers-`uname -r`/scripts/sign-file sha256 build/inotify_hook.priv build/inotify_hook.der build/inotify-hook/inotify_hook.ko",
+
+            "cargo build --release",
             "cd inotify-lookup-py && maturin build --release --manylinux off"
         ],
         "output": [
             "./target/release/libinotify_lookup.so@libinotify_lookup.so",
-            "./build/inotify-hook/inotify_hook.ko@kmod/inotify_hook.ko"
+            "./build/inotify-hook/inotify_hook.ko@kmod/inotify_hook.ko",
+            "./build/inotify_hook.priv@kmod/inotify_hook.priv",
+            "./build/inotify_hook.der@kmod/inotify_hook.der"
         ]
     },
 
