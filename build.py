@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
-import os, sys, time, argparse, subprocess as sp
-from pathlib import Path
-import json, yaml, tempfile
-import halo, termcolor
+import argparse
 from getpass import getpass, getuser
+import halo
+import json
+import os
+from pathlib import Path
+import subprocess as sp
+import sys
+import tempfile
+import termcolor
+import time
+import yaml
 
 DBG = 1
 COMPAT = ['v1']
@@ -91,8 +98,9 @@ class NoneLogger:
     pass
 
 class SimpleBuildSystem:
-    def __init__(self, prefix=''):
+    def __init__(self, prefix='', ask_permission=True):
         self.prefix = prefix
+        self.ask_permission = ask_permission
         self.output_dir = Path(OUTPUT_DIRECTORY)
         self.install_dir = Path(INSTALL_DIRECTORY)
 
@@ -155,6 +163,8 @@ class SimpleBuildSystem:
             logger = logger.warn()
             if not hasattr(self, 'password'):
                 self.password = getpass(f'[sbs] password for {getuser()}: ')
+            elif self.ask_permission:
+                input('[sbs] press ENTER to continue with permission.')
             logger.start()
             _command = f'echo {self.password} | sudo -kS sh -c "{command}"'
         else:
@@ -365,7 +375,7 @@ class SimpleBuildSystem:
             self.output = _output
             self._remove_files(self.output_dir)
             # cleanup empty folders
-            SHELL_RUN(f'find {self.output_dir} -type d -empty -delete')
+            SHELL_RUN(f'find {self.output_dir} -type d -empty -delete 2> /dev/null || true')
             #
             if 'clean' in _manifest:
                 _path_root = POSIX( Path('.').resolve() )
@@ -524,10 +534,10 @@ def execute(sbs:SimpleBuildSystem, command:str, work_dirs:list, logo_show_flag:b
         return None
     pass
 
-def sbs_entry(command, work_dirs, logo_show_flag=False, enable_halo=False, prefix=''):
+def sbs_entry(command, work_dirs, ask_permission=True, logo_show_flag=False, enable_halo=False, prefix=''):
     os.environ['SBS_NESTED_LAYER'] = str( int(os.getenv('SBS_NESTED_LAYER',-1)) + 1 )
     ##
-    sbs = SimpleBuildSystem(prefix)
+    sbs = SimpleBuildSystem(prefix, ask_permission)
     work_dirs = validate_work_dirs(command, work_dirs)
     ret = execute(sbs, command, work_dirs, logo_show_flag, enable_halo)
     ##
@@ -537,12 +547,16 @@ def sbs_entry(command, work_dirs, logo_show_flag=False, enable_halo=False, prefi
 def init_subparsers(subparsers):
     p_build = subparsers.add_parser('build')
     p_build.add_argument('names', metavar='name', nargs='*')
-    #
-    p_build = subparsers.add_parser('clean')
-    p_build.add_argument('names', metavar='name', nargs='*')
+    p_build.add_argument('-y', '--yes', action='store_true', default=False,
+                        help='ask for permission only once.')
     #
     p_install = subparsers.add_parser('install')
     p_install.add_argument('names', metavar='name', nargs='*')
+    p_install.add_argument('-y', '--yes', action='store_true', default=False,
+                        help='ask for permission only once.')
+    #
+    p_clean = subparsers.add_parser('clean')
+    p_clean.add_argument('names', metavar='name', nargs='*')
     #
     p_uninstall = subparsers.add_parser('uninstall')
     p_uninstall.add_argument('names', metavar='name', nargs=1)
@@ -560,8 +574,9 @@ def main():
     #
     args = parser.parse_args()
     work_dirs = getattr(args, 'names', [])
+    ask_permission = not args.yes if hasattr(args, 'yes') else True
     logo_show_flag = not args.no_logo_show
-    sbs_entry(args.command, work_dirs, logo_show_flag, True)
+    sbs_entry(args.command, work_dirs, ask_permission, logo_show_flag,True)
     pass
 
 if __name__ == '__main__':
