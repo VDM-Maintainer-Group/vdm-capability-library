@@ -179,7 +179,7 @@ class SimpleBuildSystem:
     def execute_sbs(self, command, args, logger=NoneLogger):
         logger = logger.info()
         enable_halo = not (logger==NoneLogger)
-        sbs_entry(command, args, False, enable_halo, prefix=self._title%'')
+        sbs_entry(command, args, self.ask_permission, False, enable_halo, prefix=self._title%'')
         # for arg in args:
         #     sp.run(f'$SBS_EXECUTABLE {command} {arg}', check=True, shell=True)
         logger.start()
@@ -576,7 +576,7 @@ def main():
     work_dirs = getattr(args, 'names', [])
     ask_permission = not args.yes if hasattr(args, 'yes') else True
     logo_show_flag = not args.no_logo_show
-    sbs_entry(args.command, work_dirs, ask_permission, logo_show_flag,True)
+    sbs_entry(args.command, work_dirs, ask_permission, logo_show_flag, enable_halo=True)
     pass
 
 if __name__ == '__main__':
