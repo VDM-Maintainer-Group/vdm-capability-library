@@ -209,7 +209,7 @@ int comm_list_add_by_name(const char *name)
     
     TRY_BUF( item, sizeof(struct comm_list_item) ) {
         // allocate memory
-        TRY_BUF( item->comm_name, strlen(name) ) {
+        TRY_BUF( item->comm_name, strlen(name)+1 ) {
             // initialize the item
             strcpy(item->comm_name, name);
             comm_record_init(&item->record);
