@@ -7,9 +7,7 @@ Feel free to *use or contribute* every best practice in this repo.
 
 - Have `pyvdm` installed, you can use `sbs` to invoke the build system as alias to `build.py` file in this repo;
 
-- Bare `sbs build` is equal to `sbs build *` instead of `sbs build .`, which applies to all the sub-folders with `manifest.json` file;
-
-- It is suggested to use a temporary folder for a single capability building, e.g., `mkdir build && cd build && sbs build ..`
+- Bare `sbs build` is equal to `sbs build *` instead of `sbs build .`, which applies to all the sub-folders with valid `manifest.json` file;
 
 -----
 
