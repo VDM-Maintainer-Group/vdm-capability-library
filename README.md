@@ -17,6 +17,9 @@ Feel free to *use or contribute* every best practice in this repo.
 
 ### Structure
 
+- libfrida
+  > TODO: provide safe (limited) binding for [frida](https://github.com/frida/frida) for dynamic instrumentation.
+
 - [inotify-lookup](./inotify-lookup)
   
   > find out files one application is watching on, with inotify.
