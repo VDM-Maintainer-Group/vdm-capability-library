@@ -30,4 +30,5 @@ sbs install
 N/A.
 
 ### Todo
-- [ ] install extensions via install scripts;
+- [x] install extensions via install scripts;
+- [ ] migrate to [Manifest V3](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)
